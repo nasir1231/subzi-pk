@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Subzi.pk</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:'Outfit',sans-serif;background:#F0F5F3;color:#0F2D1F;min-height:100vh;overflow-x:hidden}
+:root{
+  --g0:#1A3A2E;--g1:#1E6B45;--g2:#28A05A;
+  --red:#C62828;--red-bg:rgba(198,40,40,.1);
+  --grn:#2E7D32;--grn-bg:rgba(46,125,50,.1);
+  --amb:#B8860B;--amb-bg:rgba(184,134,11,.1);
+  --bg:#F0F5F3;--card:#FFFFFF;--bdr:#D8E8DF;
+  --text:#0F2D1F;--muted:#6B8C7A;
+  --hh:54px;--tbh:42px;
+}
+
+/* ── LOGIN SCREEN ── */
+#loginScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(150deg,var(--g0) 0%,var(--g1) 60%,var(--g2) 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;
+}
+.login-box{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:28px 22px;width:100%;max-width:340px}
+.login-logo{text-align:center;color:#fff;margin-bottom:24px}
+.login-logo-icon{font-size:48px;display:block;margin-bottom:8px}
+.login-logo h1{font-size:24px;font-weight:700}
+.login-logo p{font-size:12px;opacity:.7;margin-top:3px}
+.login-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;display:block}
+.login-input{width:100%;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;font-size:15px;font-family:'Outfit',sans-serif;outline:none;margin-bottom:14px}
+.login-input::placeholder{color:rgba(255,255,255,.45)}
+.login-input:focus{border-color:rgba(255,255,255,.6)}
+.login-btn{width:100%;padding:13px;background:#fff;color:var(--g1);border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;margin-top:4px}
+.login-btn:active{opacity:.85}
+.login-err{font-size:12px;color:rgba(255,160,160,.95);text-align:center;min-height:18px;margin-bottom:6px}
+.login-forgot{background:none;border:none;color:rgba(255,255,255,.6);font-size:12px;font-family:'Outfit',sans-serif;cursor:pointer;width:100%;text-align:center;margin-top:12px;padding:4px}
+
+/* ── PIN SCREEN ── */
+#pinScreen{
+  position:fixed;inset:0;z-index:9998;
+  background:linear-gradient(150deg,var(--g0) 0%,var(--g1) 60%,var(--g2) 100%);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:28px;
+}
+.pin-logo{text-align:center;color:#fff}
+.pin-logo-icon{font-size:48px;display:block;margin-bottom:6px}
+.pin-logo h1{font-size:21px;font-weight:700}
+.pin-logo p{font-size:12px;opacity:.65;margin-top:2px}
+.pin-err{font-size:12px;color:rgba(255,120,120,.9);height:18px;text-align:center}
+.pin-dots{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:260px}
+.dot{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.4);transition:.15s;flex-shrink:0}
+.dot.filled{background:#fff;border-color:#fff}
+.pin-pad{display:grid;grid-template-columns:repeat(3,68px);gap:10px}
+.pk{width:68px;height:68px;border-radius:50%;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:22px;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;transition:.1s}
+.pk:active{background:rgba(255,255,255,.28)}
+.pk.empty{border:none;background:transparent;cursor:default}
+.pin-hint{font-size:11px;color:rgba(255,255,255,.5);text-align:center}
+.logout-link{background:none;border:none;color:rgba(255,255,255,.45);font-size:11px;font-family:'Outfit',sans-serif;cursor:pointer;margin-top:4px}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.shake{animation:shake .4s ease}
+
+/* ── LOADING ── */
+#loadingScreen{
+  position:fixed;inset:0;z-index:9997;
+  background:var(--bg);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;
+}
+.spinner{width:36px;height:36px;border:3px solid var(--bdr);border-top-color:var(--g1);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--muted)}
+
+/* ── APP SHELL ── */
+#app{display:none}
+#hdr{position:fixed;top:0;left:0;right:0;height:var(--hh);background:var(--g1);display:flex;align-items:center;padding:0 12px;gap:8px;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.hdr-title{color:#fff;font-weight:700;font-size:15px;flex:1;letter-spacing:-.2px;white-space:nowrap;overflow:hidden}
+.hdr-month{display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.15);border-radius:20px;padding:3px 10px;flex-shrink:0}
+.hm-btn{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 3px;line-height:1;font-family:'Outfit',sans-serif}
+.hm-lbl{color:#fff;font-size:12px;font-weight:600;min-width:64px;text-align:center}
+.rt-dot{width:8px;height:8px;border-radius:50%;background:#4CAF50;flex-shrink:0;box-shadow:0 0 0 2px rgba(76,175,80,.3)}
+.rt-dot.offline{background:#ff7043}
+
+/* ── TAB BAR ── */
+#tabBar{position:fixed;top:var(--hh);left:0;right:0;height:var(--tbh);background:var(--card);border-bottom:1px solid var(--bdr);display:flex;overflow-x:auto;z-index:99;scrollbar-width:none}
+#tabBar::-webkit-scrollbar{display:none}
+.tb{flex:none;padding:0 13px;height:100%;border:none;background:none;font-family:'Outfit',sans-serif;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;border-bottom:3px solid transparent;cursor:pointer;transition:color .15s,border-color .15s}
+.tb.active{color:var(--g1);border-bottom-color:var(--g1);font-weight:700}
+
+/* ── CONTENT ── */
+#content{padding-top:calc(var(--hh) + var(--tbh));padding-bottom:24px;min-height:100vh}
+.pane{display:none;padding:10px 10px 20px}
+.pane.active{display:block;animation:fadeUp .18s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CARDS ── */
+.card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.card-hero{background:linear-gradient(135deg,var(--g0),var(--g2));color:#fff;border-radius:14px;padding:16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(30,107,69,.3)}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.sc{background:var(--card);border-radius:12px;padding:13px 12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.sc-lbl{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.sc-val{font-size:19px;font-weight:700;color:var(--g1);line-height:1.1}
+.sc-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:0 2px}
+.sh-t{font-size:14px;font-weight:700;color:var(--text)}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 16px;border-radius:9px;border:none;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:opacity .15s;line-height:1;white-space:nowrap}
+.btn:active{opacity:.72}
+.btn-p{background:var(--g1);color:#fff}
+.btn-d{background:var(--red);color:#fff}
+.btn-o{background:none;border:1.5px solid var(--g1);color:var(--g1)}
+.btn-g{background:none;border:1.5px solid var(--bdr);color:var(--text)}
+.btn-wa{background:#25D366;color:#fff}
+.btn-sm{padding:5px 11px;font-size:11px;border-radius:7px}
+.btn-full{width:100%;justify-content:center}
+.mt10{margin-top:10px}
+
+/* ── FORMS ── */
+.fg{margin-bottom:12px}
+.fl{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
+.fi,.fsel{width:100%;padding:10px 13px;border:1.5px solid var(--bdr);border-radius:9px;font-family:'Outfit',sans-serif;font-size:15px;background:var(--card);color:var(--text);outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none}
+.fi:focus,.fsel:focus{border-color:var(--g1)}
+.search-wrap{margin-bottom:10px;position:relative}
+.search-wrap input{padding-left:36px}
+.search-wrap::before{content:'🔍';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none}
+
+/* ── MODAL ── */
+#mOverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:none;align-items:flex-end;justify-content:center}
+.modal{background:var(--card);border-radius:18px 18px 0 0;padding:18px 18px 30px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.modal-title{font-size:16px;font-weight:700}
+.modal-x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);padding:2px;line-height:1}
+
+/* ── BADGES ── */
+.badge{padding:2px 7px;border-radius:20px;font-size:10.5px;font-weight:700;display:inline-block;white-space:nowrap}
+.bg-g{background:var(--grn-bg);color:var(--grn)}
+.bg-r{background:var(--red-bg);color:var(--red)}
+.bg-a{background:var(--amb-bg);color:var(--amb)}
+.bg-b{background:rgba(30,107,69,.1);color:var(--g1)}
+
+/* ── REGISTER GRID ── */
+.reg-wrap{overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:11px;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.07);max-height:calc(100vh - var(--hh) - var(--tbh) - 55px)}
+.reg-tbl{border-collapse:collapse;font-size:12.5px}
+.reg-tbl th,.reg-tbl td{border:1px solid var(--bdr);padding:0;height:30px}
+.reg-tbl th{background:var(--g0);color:#fff;font-size:10px;font-weight:700;text-align:center;padding:0 3px;white-space:nowrap;height:28px}
+.reg-tbl thead th{position:sticky;top:0;z-index:4;background:var(--g0)}
+.nc{position:sticky;left:0;background:var(--card);z-index:2;min-width:110px;max-width:130px;padding:0 7px;font-size:11.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-right:2px solid var(--bdr) !important}
+.nh{position:sticky;left:0;top:0;z-index:6 !important;background:var(--g0) !important;min-width:110px}
+.gi{width:46px;border:none;background:transparent;text-align:center;font-size:13px;font-family:'Outfit',sans-serif;padding:5px 1px;display:block;outline:none;color:var(--text);-moz-appearance:textfield}
+.gi::-webkit-outer-spin-button,.gi::-webkit-inner-spin-button{-webkit-appearance:none}
+.gi:focus{background:rgba(30,107,69,.1);border-radius:3px}
+.tot-c{background:rgba(30,107,69,.06);font-weight:700;font-size:11px;text-align:center;padding:0 5px;color:var(--g1);min-width:50px}
+.day-t{background:var(--g1) !important;color:#fff !important;font-size:11px;font-weight:700;text-align:center;padding:0 3px}
+.tot-row td{background:#1A3A2E !important;color:#fff !important}
+.tot-row .nc{background:#1A3A2E !important;color:#fff !important;font-weight:700;font-size:12px}
+.tot-row .day-t{background:#1E6B45 !important;color:#fff !important;font-size:12px;font-weight:700}
+.reg-tbl tbody tr.row-hi .nc{background:#F1F8E9 !important;color:var(--text) !important}
+.reg-tbl tbody tr.row-hi td{background:#F9FBE7 !important}
+.reg-tbl tbody tr.row-hi .tot-c{background:#F0F7DC !important;color:var(--g1) !important}
+.reg-tbl thead th.col-hi{background:#28A05A !important;outline:2px solid #CCFF90;outline-offset:-2px}
+.reg-tbl td.cell-hi{background:#E8F5E9 !important}
+
+/* ── TABLES ── */
+var TH_BASE='padding:8px 10px;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);';
+.ltbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.ltbl th{background:var(--g1);color:#fff;padding:8px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.ltbl td{padding:8px 10px;border-bottom:1px solid var(--bdr);vertical-align:top}
+
+/* ── UTILS ── */
+.tr{text-align:right}.tc{text-align:center}
+.fw6{font-weight:600}.fw7{font-weight:700}
+.text-g{color:var(--grn)}.text-r{color:var(--red)}.text-m{color:var(--muted)}
+.empty-st{text-align:center;color:var(--muted);padding:40px 20px;font-size:13px;line-height:1.6}
+.divider{height:1px;background:var(--bdr);margin:8px 0}
+.row-pair{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
+
+/* ── PRINT ── */
+#printArea{display:none}
+@media print{body>*:not(#printArea){display:none!important}#printArea{display:block!important;font-family:'Outfit',sans-serif}}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="login-logo-icon">🌿</span>
+      <h1>Subzi.pk</h1>
+      <p>Sign in to your account</p>
+    </div>
+    <div class="login-err" id="loginErr"></div>
+    <label class="login-label">Email</label>
+    <input type="email" class="login-input" id="loginEmail" placeholder="your@email.com" autocomplete="email">
+    <label class="login-label">Password</label>
+    <input type="password" class="login-input" id="loginPwd" placeholder="Password" autocomplete="current-password">
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">Sign In</button>
+    <button class="login-forgot" onclick="doForgotPassword()">Forgot password?</button>
+  </div>
+</div>
+
+<!-- ═══ PIN SCREEN ═══ -->
+<div id="pinScreen">
+  <div class="pin-logo">
+    <span class="pin-logo-icon">🌿</span>
+    <h1>Subzi.pk</h1>
+    <p id="pinUserEmail" style="font-size:11px;opacity:.6;margin-top:2px;"></p>
+  </div>
+  <div class="pin-dots" id="pinDots"></div>
+  <div class="pin-err" id="pinErr"></div>
+  <div class="pin-pad">
+    <button class="pk" onclick="pinPress('1')">1</button>
+    <button class="pk" onclick="pinPress('2')">2</button>
+    <button class="pk" onclick="pinPress('3')">3</button>
+    <button class="pk" onclick="pinPress('4')">4</button>
+    <button class="pk" onclick="pinPress('5')">5</button>
+    <button class="pk" onclick="pinPress('6')">6</button>
+    <button class="pk" onclick="pinPress('7')">7</button>
+    <button class="pk" onclick="pinPress('8')">8</button>
+    <button class="pk" onclick="pinPress('9')">9</button>
+    <div class="pk empty"></div>
+    <button class="pk" onclick="pinPress('0')">0</button>
+    <button class="pk" onclick="pinBack()">⌫</button>
+  </div>
+  <div class="pin-hint">Enter your PIN</div>
+  <button class="logout-link" onclick="doLogout()">Sign out</button>
+</div>
+
+<!-- ═══ LOADING ═══ -->
+<div id="loadingScreen">
+  <div class="spinner"></div>
+  <div class="loading-txt">Loading data…</div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <header id="hdr">
+    <span class="hdr-title">🌿 Subzi.pk</span>
+    <div class="hdr-month">
+      <button class="hm-btn" onclick="prevMonth()">‹</button>
+      <span class="hm-lbl" id="monthLbl"></span>
+      <button class="hm-btn" onclick="nextMonth()">›</button>
+    </div>
+    <div class="rt-dot" id="rtDot" title="Real-time connection"></div>
+  </header>
+  <div id="tabBar">
+    <button class="tb active" data-tab="dashboard"  onclick="showTab('dashboard')">Dashboard</button>
+    <button class="tb" data-tab="sales"      onclick="showTab('sales')">Sale Register</button>
+    <button class="tb" data-tab="purchases"  onclick="showTab('purchases')">Purchase Reg.</button>
+    <button class="tb" data-tab="expenses"   onclick="showTab('expenses')">Expense/Cash</button>
+    <button class="tb" data-tab="customers"  onclick="showTab('customers')">Customers</button>
+    <button class="tb" data-tab="suppliers"  onclick="showTab('suppliers')">Suppliers</button>
+    <button class="tb" data-tab="receivable" onclick="showTab('receivable')">Receivable</button>
+    <button class="tb" data-tab="payable"    onclick="showTab('payable')">Payable</button>
+    <button class="tb" data-tab="settings"   onclick="showTab('settings')">Settings</button>
+  </div>
+  <main id="content">
+    <div id="pane-dashboard"  class="pane active"></div>
+    <div id="pane-sales"      class="pane"></div>
+    <div id="pane-purchases"  class="pane"></div>
+    <div id="pane-expenses"   class="pane"></div>
+    <div id="pane-customers"  class="pane"></div>
+    <div id="pane-suppliers"  class="pane"></div>
+    <div id="pane-receivable" class="pane"></div>
+    <div id="pane-payable"    class="pane"></div>
+    <div id="pane-settings"   class="pane"></div>
+  </main>
+</div>
+
+<!-- ═══ MODAL ═══ -->
+<div id="mOverlay" onclick="closeModal(event)">
+  <div class="modal" id="mBox"></div>
+</div>
+
+<!-- ═══ PRINT ═══ -->
+<div id="printArea"></div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════
+// SUPABASE CONFIG
+// ════════════════════════════════════════════
+var SUPABASE_URL = 'https://qtnaftclmuownwogamof.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_H3t9TBXtKeHs6xzqTUqWMA_vT_nPTSb';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+var state = {
+  customers: [],
+  suppliers: [],
+  sales: {},
+  purchases: {},
+  expenses: [],
+  recPayments: [],
+  payPayments: [],
+  settings: { pin: '4499009', bizName: 'Subzi.pk', bizAddr: 'Badian, Lahore', bizPhone: '0300 4411263' }
+};
+
+var curTab = 'dashboard';
+var selMonth = '';
+var pinBuf = '';
+var isRegEditing = false;
+
+// ════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════
+function eid(id) { return document.getElementById(id); }
+function pn(v) { return parseFloat(v) || 0; }
+function nowMonth() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
+function daysIn(ym) { var p = ym.split('-'); return new Date(Number(p[0]), Number(p[1]), 0).getDate(); }
+function monthNames() { return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; }
+function mLabel(ym) { if (!ym) return ''; var p = ym.split('-'); return monthNames()[Number(p[1])-1]+' '+p[0]; }
+function mShort(ym) { if (!ym) return ''; return monthNames()[Number(ym.split('-')[1])-1]; }
+function fmtQ(v) { var n = pn(v); if (n===0) return '0'; return n%1===0 ? String(n) : n.toFixed(1); }
+function fmtR(v) { return 'Rs\u00a0'+Math.round(pn(v)).toLocaleString('en-PK'); }
+function fmtDate(d) { if (!d) return ''; var dt = new Date(d+'T00:00:00'); return dt.getDate()+' '+monthNames()[dt.getMonth()]; }
+function adjMonth(ym, delta) { var p = ym.split('-'); var nd = new Date(Number(p[0]), Number(p[1])-1+delta, 1); return nd.getFullYear()+'-'+String(nd.getMonth()+1).padStart(2,'0'); }
+function escHtml(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ════════════════════════════════════════════
+// AUTH — LOGIN
+// ════════════════════════════════════════════
+async function doLogin() {
+  var email = eid('loginEmail').value.trim();
+  var pwd   = eid('loginPwd').value;
+  eid('loginErr').textContent = '';
+  if (!email || !pwd) { eid('loginErr').textContent = 'Enter email and password.'; return; }
+  eid('loginBtn').textContent = 'Signing in…';
+  var res = await sb.auth.signInWithPassword({ email: email, password: pwd });
+  if (res.error) {
+    eid('loginErr').textContent = res.error.message;
+    eid('loginBtn').textContent = 'Sign In';
+  } else {
+    await loadSettings();
+    showPinScreen(email);
+  }
+}
+
+async function doForgotPassword() {
+  var email = eid('loginEmail').value.trim();
+  if (!email) { eid('loginErr').textContent = 'Enter your email first.'; return; }
+  await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+  eid('loginErr').textContent = '';
+  alert('Password reset email sent to ' + email);
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  pinBuf = '';
+  eid('loginEmail').value = '';
+  eid('loginPwd').value = '';
+  eid('loginBtn').textContent = 'Sign In';
+  eid('loginErr').textContent = '';
+  eid('pinScreen').style.display = 'none';
+  eid('app').style.display = 'none';
+  eid('loginScreen').style.display = 'flex';
+}
+
+// ════════════════════════════════════════════
+// AUTH — PIN
+// ════════════════════════════════════════════
+function showPinScreen(email) {
+  eid('loginScreen').style.display = 'none';
+  eid('pinScreen').style.display = 'flex';
+  pinBuf = '';
+  var pinLen = state.settings.pin.length;
+  var dotsHtml = '';
+  for (var i = 0; i < pinLen; i++) dotsHtml += '<div class="dot" id="d' + i + '"></div>';
+  eid('pinDots').innerHTML = dotsHtml;
+  if (email) eid('pinUserEmail').textContent = email;
+  eid('pinErr').textContent = '';
+}
+
+function pinPress(digit) {
+  pinBuf += digit;
+  updateDots();
+  checkPin();
+}
+
+function pinBack() {
+  pinBuf = pinBuf.slice(0, -1);
+  updateDots();
+  eid('pinErr').textContent = '';
+}
+
+function updateDots() {
+  var pinLen = state.settings.pin.length;
+  for (var i = 0; i < pinLen; i++) {
+    var el = eid('d' + i);
+    if (el) el.classList.toggle('filled', i < pinBuf.length);
+  }
+}
+
+async function checkPin() {
+  if (pinBuf === state.settings.pin) {
+    eid('pinScreen').style.display = 'none';
+    showLoading(true);
+    await loadAllData();
+    setupRealtime();
+    showLoading(false);
+    eid('app').style.display = 'block';
+    selMonth = nowMonth();
+    eid('monthLbl').textContent = mLabel(selMonth);
+    showTab('dashboard');
+  } else if (pinBuf.length >= state.settings.pin.length) {
+    var dots = eid('pinDots');
+    dots.classList.add('shake');
+    setTimeout(function() { dots.classList.remove('shake'); }, 450);
+    eid('pinErr').textContent = 'Wrong PIN. Try again.';
+    pinBuf = '';
+    updateDots();
+  }
+}
+
+// ════════════════════════════════════════════
+// LOADING
+// ════════════════════════════════════════════
+function showLoading(on) {
+  eid('loadingScreen').style.display = on ? 'flex' : 'none';
+}
+
+// ════════════════════════════════════════════
+// DATA LOADING FROM SUPABASE
+// ════════════════════════════════════════════
+async function loadSettings() {
+  var res = await sb.from('app_settings').select('*');
+  if (res.data) {
+    res.data.forEach(function(r) {
+      if (r.key === 'pin')       state.settings.pin = r.value;
+      if (r.key === 'biz_name')  state.settings.bizName = r.value;
+      if (r.key === 'biz_addr')  state.settings.bizAddr = r.value;
+      if (r.key === 'biz_phone') state.settings.bizPhone = r.value;
+    });
+  }
+}
+
+async function loadCustomers() {
+  var res = await sb.from('customers').select('*').order('name');
+  if (res.data) state.customers = res.data;
+}
+
+async function loadSuppliers() {
+  var res = await sb.from('suppliers').select('*').order('name');
+  if (res.data) state.suppliers = res.data;
+}
+
+async function loadSales() {
+  var res = await sb.from('sales').select('*');
+  if (res.data) {
+    state.sales = {};
+    res.data.forEach(function(r) {
+      if (!state.sales[r.month]) state.sales[r.month] = {};
+      if (!state.sales[r.month][r.customer_id]) state.sales[r.month][r.customer_id] = {};
+      state.sales[r.month][r.customer_id][String(r.day)] = String(r.qty);
+    });
+  }
+}
+
+async function loadPurchases() {
+  var res = await sb.from('purchases').select('*');
+  if (res.data) {
+    state.purchases = {};
+    res.data.forEach(function(r) {
+      if (!state.purchases[r.month]) state.purchases[r.month] = {};
+      if (!state.purchases[r.month][r.supplier_id]) state.purchases[r.month][r.supplier_id] = {};
+      state.purchases[r.month][r.supplier_id][String(r.day)] = String(r.qty);
+    });
+  }
+}
+
+async function loadExpenses() {
+  var res = await sb.from('expenses').select('*').order('date');
+  if (res.data) {
+    state.expenses = res.data.map(function(e) {
+      return { id: e.id, date: e.date, type: e.type, description: e.description, amount: e.amount };
+    });
+  }
+}
+
+async function loadRecPayments() {
+  var res = await sb.from('rec_payments').select('*').order('date');
+  if (res.data) {
+    state.recPayments = res.data.map(function(p) {
+      return { id: p.id, custId: p.customer_id, date: p.date, amount: p.amount, note: p.note };
+    });
+  }
+}
+
+async function loadPayPayments() {
+  var res = await sb.from('pay_payments').select('*').order('date');
+  if (res.data) {
+    state.payPayments = res.data.map(function(p) {
+      return { id: p.id, suppId: p.supplier_id, date: p.date, amount: p.amount, note: p.note };
+    });
+  }
+}
+
+async function loadAllData() {
+  await Promise.all([
+    loadCustomers(), loadSuppliers(), loadSales(), loadPurchases(),
+    loadExpenses(), loadRecPayments(), loadPayPayments()
+  ]);
+}
+
+// ════════════════════════════════════════════
+// REAL-TIME SUBSCRIPTIONS
+// ════════════════════════════════════════════
+function setupRealtime() {
+  var dot = eid('rtDot');
+  sb.channel('subzi-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, function() {
+      loadCustomers().then(function() { if (curTab==='customers'||curTab==='dashboard'||curTab==='receivable') showTab(curTab); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'suppliers' }, function() {
+      loadSuppliers().then(function() { if (curTab==='suppliers'||curTab==='dashboard'||curTab==='payable') showTab(curTab); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, function() {
+      loadSales().then(function() {
+        if (!isRegEditing && curTab==='sales') renderSales();
+        else if (curTab==='dashboard') renderDashboard();
+        else if (curTab==='receivable') renderReceivable();
+      });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'purchases' }, function() {
+      loadPurchases().then(function() {
+        if (!isRegEditing && curTab==='purchases') renderPurchases();
+        else if (curTab==='dashboard') renderDashboard();
+        else if (curTab==='payable') renderPayable();
+      });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, function() {
+      loadExpenses().then(function() { if (curTab==='expenses'||curTab==='dashboard') showTab(curTab); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'rec_payments' }, function() {
+      loadRecPayments().then(function() { if (curTab==='receivable') renderReceivable(); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'pay_payments' }, function() {
+      loadPayPayments().then(function() { if (curTab==='payable') renderPayable(); });
+    })
+    .subscribe(function(status) {
+      if (dot) dot.className = 'rt-dot' + (status === 'SUBSCRIBED' ? '' : ' offline');
+    });
+}
+
+// ════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════
+function showTab(tab) {
+  curTab = tab;
+  isRegEditing = false;
+  document.querySelectorAll('.tb').forEach(function(b) { b.classList.toggle('active', b.dataset.tab===tab); });
+  document.querySelectorAll('.pane').forEach(function(p) { p.classList.toggle('active', p.id==='pane-'+tab); });
+  var renders = { dashboard:renderDashboard, sales:renderSales, purchases:renderPurchases,
+    expenses:renderExpenses, customers:renderCustomers, suppliers:renderSuppliers,
+    receivable:renderReceivable, payable:renderPayable, settings:renderSettings };
+  if (renders[tab]) renders[tab]();
+}
+
+function prevMonth() { selMonth = adjMonth(selMonth,-1); eid('monthLbl').textContent = mLabel(selMonth); showTab(curTab); }
+function nextMonth() { selMonth = adjMonth(selMonth, 1); eid('monthLbl').textContent = mLabel(selMonth); showTab(curTab); }
+
+// ════════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════════
+function showModal(title, body) {
+  eid('mBox').innerHTML = '<div class="modal-hdr"><span class="modal-title">'+title+'</span><button class="modal-x" onclick="closeModal()">✕</button></div>'+body;
+  eid('mOverlay').style.display = 'flex';
+  setTimeout(function() { eid('mBox').scrollTop=0; }, 10);
+}
+function closeModal(e) { if (e && e.target.id !== 'mOverlay') return; eid('mOverlay').style.display = 'none'; }
+
+// ════════════════════════════════════════════
+// BALANCE CALCULATIONS (identical to dairy app)
+// ════════════════════════════════════════════
+function custBal(cid) {
+  var c = state.customers.find(function(x) { return x.id===cid; }); if (!c) return 0;
+  var bal = 0;
+  Object.keys(state.sales).forEach(function(m) {
+    Object.keys(state.sales[m][cid]||{}).forEach(function(d) { bal += pn(state.sales[m][cid][d]) * pn(c.rate); });
+  });
+  state.recPayments.filter(function(p) { return p.custId===cid; }).forEach(function(p) { bal -= pn(p.amount); });
+  return bal;
+}
+
+function suppBal(sid) {
+  var s = state.suppliers.find(function(x) { return x.id===sid; }); if (!s) return 0;
+  var bal = 0;
+  Object.keys(state.purchases).forEach(function(m) {
+    Object.keys(state.purchases[m][sid]||{}).forEach(function(d) { bal += pn(state.purchases[m][sid][d]) * pn(s.rate); });
+  });
+  state.payPayments.filter(function(p) { return p.suppId===sid; }).forEach(function(p) { bal -= pn(p.amount); });
+  return bal;
+}
+
+function custBalBefore(cid, beforeMonth) {
+  var c = state.customers.find(function(x) { return x.id===cid; }); if (!c) return 0;
+  var bal = 0;
+  Object.keys(state.sales).filter(function(m) { return m < beforeMonth; }).forEach(function(m) {
+    Object.keys(state.sales[m][cid]||{}).forEach(function(d) { bal += pn(state.sales[m][cid][d]) * pn(c.rate); });
+  });
+  state.recPayments.filter(function(p) { return p.custId===cid && p.date && p.date.slice(0,7)<beforeMonth; }).forEach(function(p) { bal -= pn(p.amount); });
+  return bal;
+}
+
+function suppBalBefore(sid, beforeMonth) {
+  var s = state.suppliers.find(function(x) { return x.id===sid; }); if (!s) return 0;
+  var bal = 0;
+  Object.keys(state.purchases).filter(function(m) { return m < beforeMonth; }).forEach(function(m) {
+    Object.keys(state.purchases[m][sid]||{}).forEach(function(d) { bal += pn(state.purchases[m][sid][d]) * pn(s.rate); });
+  });
+  state.payPayments.filter(function(p) { return p.suppId===sid && p.date && p.date.slice(0,7)<beforeMonth; }).forEach(function(p) { bal -= pn(p.amount); });
+  return bal;
+}
+
+// ════════════════════════════════════════════
+// REGISTER INPUT — async Supabase upsert
+// ════════════════════════════════════════════
+async function handleRegIn(inp) {
+  var val  = inp.value.trim();
+  var day  = parseInt(inp.dataset.day);
+  var type = inp.dataset.type;
+  var m    = selMonth;
+  var qty  = pn(val);
+
+  try {
+    if (type === 'sale') {
+      var cid = inp.dataset.eid;
+      if (!state.sales[m]) state.sales[m] = {};
+      if (!state.sales[m][cid]) state.sales[m][cid] = {};
+      if (qty > 0) {
+        state.sales[m][cid][String(day)] = val;
+        await sb.from('sales').upsert({ customer_id:cid, month:m, day:day, qty:qty }, { onConflict:'customer_id,month,day' });
+      } else {
+        delete state.sales[m][cid][String(day)];
+        await sb.from('sales').delete().match({ customer_id:cid, month:m, day:day });
+      }
+      updateSaleTots(cid, String(day), m);
+    } else {
+      var sid = inp.dataset.eid;
+      if (!state.purchases[m]) state.purchases[m] = {};
+      if (!state.purchases[m][sid]) state.purchases[m][sid] = {};
+      if (qty > 0) {
+        state.purchases[m][sid][String(day)] = val;
+        await sb.from('purchases').upsert({ supplier_id:sid, month:m, day:day, qty:qty }, { onConflict:'supplier_id,month,day' });
+      } else {
+        delete state.purchases[m][sid][String(day)];
+        await sb.from('purchases').delete().match({ supplier_id:sid, month:m, day:day });
+      }
+      updatePurchTots(sid, String(day), m);
+    }
+  } catch(e) { console.error('Save error:', e); }
+}
+
+function updateSaleTots(cid, day, m) {
+  var sd = state.sales[m]||{};
+  var c = state.customers.find(function(x) { return x.id===cid; }); if (!c) return;
+  var rq = 0; Object.keys(sd[cid]||{}).forEach(function(d) { rq += pn(sd[cid][d]); });
+  var rqEl = eid('srq-'+cid); if (rqEl) rqEl.textContent = fmtQ(rq);
+  var raEl = eid('sra-'+cid); if (raEl) raEl.textContent = fmtR(rq*pn(c.rate));
+  var dq = 0; state.customers.forEach(function(x) { dq += pn((sd[x.id]||{})[day]||0); });
+  var dtEl = eid('sdt-'+day); if (dtEl) dtEl.textContent = dq>0?fmtQ(dq):'';
+  var gq=0,ga=0; state.customers.forEach(function(x) { var xq=0; Object.keys(sd[x.id]||{}).forEach(function(d){ xq+=pn(sd[x.id][d]); }); gq+=xq; ga+=xq*pn(x.rate); });
+  var gqEl=eid('sgt-q'); if (gqEl) gqEl.textContent=fmtQ(gq);
+  var gaEl=eid('sgt-a'); if (gaEl) gaEl.textContent=fmtR(ga);
+}
+
+function updatePurchTots(sid, day, m) {
+  var pd = state.purchases[m]||{};
+  var s = state.suppliers.find(function(x) { return x.id===sid; }); if (!s) return;
+  var rq = 0; Object.keys(pd[sid]||{}).forEach(function(d) { rq += pn(pd[sid][d]); });
+  var rqEl = eid('prq-'+sid); if (rqEl) rqEl.textContent = fmtQ(rq);
+  var raEl = eid('pra-'+sid); if (raEl) raEl.textContent = fmtR(rq*pn(s.rate));
+  var dq = 0; state.suppliers.forEach(function(x) { dq += pn((pd[x.id]||{})[day]||0); });
+  var dtEl = eid('pdt-'+day); if (dtEl) dtEl.textContent = dq>0?fmtQ(dq):'';
+  var gq=0,ga=0; state.suppliers.forEach(function(x) { var xq=0; Object.keys(pd[x.id]||{}).forEach(function(d){ xq+=pn(pd[x.id][d]); }); gq+=xq; ga+=xq*pn(x.rate); });
+  var gqEl=eid('pgt-q'); if (gqEl) gqEl.textContent=fmtQ(gq);
+  var gaEl=eid('pgt-a'); if (gaEl) gaEl.textContent=fmtR(ga);
+}
+
+// ════════════════════════════════════════════
+// REGISTER HIGHLIGHT
+// ════════════════════════════════════════════
+function attachRegHighlight(tableEl) {
+  if (!tableEl) return;
+  function clearAll() {
+    tableEl.querySelectorAll('tr.row-hi').forEach(function(r){r.classList.remove('row-hi');});
+    tableEl.querySelectorAll('th.col-hi').forEach(function(h){h.classList.remove('col-hi');});
+    tableEl.querySelectorAll('td.cell-hi').forEach(function(c){c.classList.remove('cell-hi');});
+  }
+  tableEl.addEventListener('focusin', function(ev) {
+    var inp = ev.target; if (!inp||!inp.classList.contains('gi')) return;
+    isRegEditing = true; clearAll();
+    var row = inp.parentNode&&inp.parentNode.parentNode; if (row&&row.tagName==='TR') row.classList.add('row-hi');
+    var day = inp.dataset.day;
+    if (day) {
+      tableEl.querySelectorAll('thead th').forEach(function(th){ if (th.textContent.trim()===String(day)) th.classList.add('col-hi'); });
+      var td = inp.parentNode; if (td) td.classList.add('cell-hi');
+    }
+  });
+  tableEl.addEventListener('focusout', function() { setTimeout(function(){ clearAll(); isRegEditing=false; }, 150); });
+}
+
+// ════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════
+function renderDashboard() {
+  var p = eid('pane-dashboard'), m = selMonth;
+  var sQty=0,sAmt=0,pQty=0,pAmt=0,exp=0,cashIn=0;
+  var sm = state.sales[m]||{};
+  state.customers.forEach(function(c){ Object.keys(sm[c.id]||{}).forEach(function(d){ var n=pn(sm[c.id][d]); sQty+=n; sAmt+=n*pn(c.rate); }); });
+  var pm = state.purchases[m]||{};
+  state.suppliers.forEach(function(s){ Object.keys(pm[s.id]||{}).forEach(function(d){ var n=pn(pm[s.id][d]); pQty+=n; pAmt+=n*pn(s.rate); }); });
+  state.expenses.filter(function(e){ return e.date&&e.date.slice(0,7)===m; }).forEach(function(e){ if(e.type==='expense') exp+=pn(e.amount); else cashIn+=pn(e.amount); });
+  var totRec=0,totPay=0;
+  state.customers.forEach(function(c){ var b=custBal(c.id); if(b>0) totRec+=b; });
+  state.suppliers.forEach(function(s){ var b=suppBal(s.id); if(b>0) totPay+=b; });
+  var profit = sAmt-pAmt-exp;
+  p.innerHTML =
+    '<div class="card-hero"><div style="font-size:10px;opacity:.75;text-transform:uppercase;letter-spacing:.6px;">Month Summary</div>' +
+    '<div style="font-size:20px;font-weight:700;margin:4px 0;">'+mLabel(m)+'</div>' +
+    '<div style="display:flex;gap:18px;font-size:12px;opacity:.82;margin-top:6px;"><span>👥 '+state.customers.length+' Customers</span><span>🚛 '+state.suppliers.length+' Suppliers</span></div></div>' +
+    '<div class="stat-grid">' +
+      '<div class="sc"><div class="sc-lbl">Sale Qty</div><div class="sc-val">'+fmtQ(sQty)+'<span style="font-size:12px;font-weight:400;color:var(--muted);"> Kg</span></div><div class="sc-sub">'+fmtR(sAmt)+'</div></div>' +
+      '<div class="sc"><div class="sc-lbl">Purchase Qty</div><div class="sc-val">'+fmtQ(pQty)+'<span style="font-size:12px;font-weight:400;color:var(--muted);"> Kg</span></div><div class="sc-sub">'+fmtR(pAmt)+'</div></div>' +
+      '<div class="sc"><div class="sc-lbl">Expenses</div><div class="sc-val text-r" style="font-size:17px;">'+fmtR(exp)+'</div><div class="sc-sub">This month</div></div>' +
+      '<div class="sc"><div class="sc-lbl">Cash Received</div><div class="sc-val text-g" style="font-size:17px;">'+fmtR(cashIn)+'</div><div class="sc-sub">This month</div></div>' +
+    '</div>' +
+    '<div class="stat-grid">' +
+      '<div class="sc"><div class="sc-lbl">Receivable</div><div class="sc-val text-r" style="font-size:17px;">'+fmtR(totRec)+'</div><div class="sc-sub">Total outstanding</div></div>' +
+      '<div class="sc"><div class="sc-lbl">Payable</div><div class="sc-val text-r" style="font-size:17px;">'+fmtR(totPay)+'</div><div class="sc-sub">Total outstanding</div></div>' +
+    '</div>' +
+    '<div class="card"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Quick P&amp;L — '+mLabel(m)+'</div>' +
+    '<div class="row-pair"><span class="text-m">Sale Amount</span><span class="fw6">'+fmtR(sAmt)+'</span></div>' +
+    '<div class="divider"></div>' +
+    '<div class="row-pair"><span class="text-m">Purchase Amount</span><span class="fw6 text-r">− '+fmtR(pAmt)+'</span></div>' +
+    '<div class="row-pair"><span class="text-m">Expenses</span><span class="fw6 text-r">− '+fmtR(exp)+'</span></div>' +
+    '<div class="divider"></div>' +
+    '<div class="row-pair" style="font-size:15px;"><span class="fw7">Profit Estimate</span><span class="fw7 '+(profit>=0?'text-g':'text-r')+'">'+fmtR(profit)+'</span></div></div>';
+}
+
+// ════════════════════════════════════════════
+// SALE REGISTER
+// ════════════════════════════════════════════
+function renderSales() {
+  var p = eid('pane-sales'), m = selMonth, days = daysIn(m);
+  var custs = state.customers.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  if (!custs.length) { p.innerHTML = '<div class="empty-st">No customers yet.</div>'; return; }
+  var sd = state.sales[m]||{}, thDays='', rows='', dayTots={}, grandQ=0, grandA=0;
+  for (var i=1;i<=days;i++) thDays += '<th>'+i+'</th>';
+  custs.forEach(function(c) {
+    var cd=sd[c.id]||{}, rq=0, cells='';
+    for (var d=1;d<=days;d++) {
+      var v=cd[d]||'', n=pn(v); rq+=n; dayTots[d]=(dayTots[d]||0)+n;
+      cells += '<td><input type="text" inputmode="decimal" class="gi" data-type="sale" data-eid="'+c.id+'" data-day="'+d+'" value="'+escHtml(v)+'" onchange="handleRegIn(this)" onfocus="this.select()"></td>';
+    }
+    var ra=rq*pn(c.rate); grandQ+=rq; grandA+=ra;
+    rows += '<tr><td class="nc" title="'+escHtml(c.name)+'">'+escHtml(c.name)+'</td>'+cells+'<td class="tot-c" id="srq-'+c.id+'">'+fmtQ(rq)+'</td><td class="tot-c" id="sra-'+c.id+'">'+fmtR(ra)+'</td></tr>';
+  });
+  var totCells='';
+  for (var d2=1;d2<=days;d2++) { var dt=dayTots[d2]||0; totCells+='<td class="day-t" id="sdt-'+d2+'">'+(dt>0?fmtQ(dt):'')+'</td>'; }
+  p.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:7px;">← Swipe left to see all days →</div>' +
+    '<div class="reg-wrap"><table class="reg-tbl" id="saleTbl">' +
+    '<thead><tr><th class="nh">Customer</th>'+thDays+'<th style="min-width:44px;">Qty</th><th style="min-width:70px;">Amount</th></tr></thead>' +
+    '<tbody>'+rows+'</tbody>' +
+    '<tfoot><tr class="tot-row"><td class="nc" style="font-weight:700;font-size:12px;">TOTAL</td>'+totCells+'<td class="day-t" id="sgt-q">'+fmtQ(grandQ)+'</td><td class="day-t" id="sgt-a">'+fmtR(grandA)+'</td></tr></tfoot>' +
+    '</table></div>';
+  attachRegHighlight(eid('saleTbl'));
+}
+
+// ════════════════════════════════════════════
+// PURCHASE REGISTER
+// ════════════════════════════════════════════
+function renderPurchases() {
+  var p = eid('pane-purchases'), m = selMonth, days = daysIn(m);
+  var supps = state.suppliers.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  if (!supps.length) { p.innerHTML = '<div class="empty-st">No suppliers yet.</div>'; return; }
+  var pd = state.purchases[m]||{}, thDays='', rows='', dayTots={}, grandQ=0, grandA=0;
+  for (var i=1;i<=days;i++) thDays += '<th>'+i+'</th>';
+  supps.forEach(function(s) {
+    var sd=pd[s.id]||{}, rq=0, cells='';
+    for (var d=1;d<=days;d++) {
+      var v=sd[d]||'', n=pn(v); rq+=n; dayTots[d]=(dayTots[d]||0)+n;
+      cells += '<td><input type="text" inputmode="decimal" class="gi" data-type="purchase" data-eid="'+s.id+'" data-day="'+d+'" value="'+escHtml(v)+'" onchange="handleRegIn(this)" onfocus="this.select()"></td>';
+    }
+    var ra=rq*pn(s.rate); grandQ+=rq; grandA+=ra;
+    rows += '<tr><td class="nc" title="'+escHtml(s.name)+'">'+escHtml(s.name)+'</td>'+cells+'<td class="tot-c" id="prq-'+s.id+'">'+fmtQ(rq)+'</td><td class="tot-c" id="pra-'+s.id+'">'+fmtR(ra)+'</td></tr>';
+  });
+  var totCells='';
+  for (var d3=1;d3<=days;d3++) { var dt2=dayTots[d3]||0; totCells+='<td class="day-t" id="pdt-'+d3+'">'+(dt2>0?fmtQ(dt2):'')+'</td>'; }
+  p.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:7px;">← Swipe left to see all days →</div>' +
+    '<div class="reg-wrap"><table class="reg-tbl" id="purchTbl">' +
+    '<thead><tr><th class="nh">Supplier</th>'+thDays+'<th style="min-width:44px;">Qty</th><th style="min-width:70px;">Amount</th></tr></thead>' +
+    '<tbody>'+rows+'</tbody>' +
+    '<tfoot><tr class="tot-row"><td class="nc" style="font-weight:700;font-size:12px;">TOTAL</td>'+totCells+'<td class="day-t" id="pgt-q">'+fmtQ(grandQ)+'</td><td class="day-t" id="pgt-a">'+fmtR(grandA)+'</td></tr></tfoot>' +
+    '</table></div>';
+  attachRegHighlight(eid('purchTbl'));
+}
+
+// ════════════════════════════════════════════
+// EXPENSES & CASH
+// ════════════════════════════════════════════
+function renderExpenses() {
+  var p=eid('pane-expenses'), m=selMonth;
+  var all = state.expenses.filter(function(e){ return e.date&&e.date.slice(0,7)===m; }).sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var expenses=all.filter(function(e){ return e.type==='expense'; }), cashes=all.filter(function(e){ return e.type==='cash'; });
+  var totExp=expenses.reduce(function(s,e){ return s+pn(e.amount); },0), totCash=cashes.reduce(function(s,e){ return s+pn(e.amount); },0);
+  function buildRows(list, type) {
+    if (!list.length) return '<tr><td colspan="4" style="text-align:center;padding:14px 6px;color:var(--muted);font-size:11px;">No entries</td></tr>';
+    return list.map(function(e) {
+      return '<tr style="border-bottom:1px solid var(--bdr);">' +
+        '<td style="padding:6px 7px;font-size:11px;white-space:nowrap;color:var(--muted);">'+fmtDate(e.date)+'</td>' +
+        '<td style="padding:6px 7px;font-size:11px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escHtml(e.description)+'</td>' +
+        '<td style="padding:6px 7px;text-align:right;font-weight:600;font-size:11px;white-space:nowrap;color:'+(type==='expense'?'var(--red)':'var(--grn)')+';">'+Math.round(pn(e.amount)).toLocaleString('en-PK')+'</td>' +
+        '<td style="padding:4px 5px;text-align:center;"><button style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 4px;" onclick="delExpense(\''+e.id+'\')">✕</button></td></tr>';
+    }).join('');
+  }
+  p.innerHTML =
+    '<div class="sh"><span class="sh-t">Expense / Cash — '+mLabel(m)+'</span><button class="btn btn-p btn-sm" onclick="showAddExpense()">+ Add</button></div>' +
+    '<div class="stat-grid" style="margin-bottom:14px;">' +
+      '<div class="sc" style="border-left:4px solid var(--red);"><div class="sc-lbl">Expenses</div><div class="sc-val text-r" style="font-size:18px;">'+fmtR(totExp)+'</div><div class="sc-sub">'+expenses.length+' entries</div></div>' +
+      '<div class="sc" style="border-left:4px solid var(--grn);"><div class="sc-lbl">Cash Received</div><div class="sc-val text-g" style="font-size:18px;">'+fmtR(totCash)+'</div><div class="sc-sub">'+cashes.length+' entries</div></div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:start;">' +
+      '<div>' +
+        '<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><div style="width:3px;height:18px;background:var(--red);border-radius:2px;"></div><span style="font-size:12px;font-weight:700;">Expenses</span><span style="font-size:10px;color:var(--muted);margin-left:auto;">Out</span></div>' +
+        '<div style="border-radius:10px;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.07);border-top:3px solid var(--red);overflow:hidden;">' +
+          '<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:rgba(198,40,40,.06);">' +
+          '<th style="padding:6px 7px;text-align:left;font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;">Date</th>' +
+          '<th style="padding:6px 7px;text-align:left;font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;">Desc</th>' +
+          '<th style="padding:6px 7px;text-align:right;font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;">Rs</th>' +
+          '<th style="width:24px;"></th></tr></thead><tbody>'+buildRows(expenses,'expense')+'</tbody>' +
+          (expenses.length>0?'<tfoot><tr style="background:rgba(198,40,40,.06);"><td colspan="2" style="padding:6px 7px;font-size:11px;font-weight:700;color:var(--red);">Total</td><td style="padding:6px 7px;text-align:right;font-size:11px;font-weight:700;color:var(--red);">'+fmtR(totExp)+'</td><td></td></tr></tfoot>':'') +
+          '</table></div></div>' +
+      '<div>' +
+        '<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px;"><div style="width:3px;height:18px;background:var(--grn);border-radius:2px;"></div><span style="font-size:12px;font-weight:700;">Cash</span><span style="font-size:10px;color:var(--muted);margin-left:auto;">In</span></div>' +
+        '<div style="border-radius:10px;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.07);border-top:3px solid var(--grn);overflow:hidden;">' +
+          '<table style="width:100%;border-collapse:collapse;"><thead><tr style="background:rgba(46,125,50,.06);">' +
+          '<th style="padding:6px 7px;text-align:left;font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;">Date</th>' +
+          '<th style="padding:6px 7px;text-align:left;font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;">Desc</th>' +
+          '<th style="padding:6px 7px;text-align:right;font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;">Rs</th>' +
+          '<th style="width:24px;"></th></tr></thead><tbody>'+buildRows(cashes,'cash')+'</tbody>' +
+          (cashes.length>0?'<tfoot><tr style="background:rgba(46,125,50,.06);"><td colspan="2" style="padding:6px 7px;font-size:11px;font-weight:700;color:var(--grn);">Total</td><td style="padding:6px 7px;text-align:right;font-size:11px;font-weight:700;color:var(--grn);">'+fmtR(totCash)+'</td><td></td></tr></tfoot>':'') +
+          '</table></div></div>' +
+    '</div>';
+}
+
+function showAddExpense() {
+  var today = new Date().toISOString().slice(0,10);
+  showModal('Add Expense / Cash',
+    '<div class="fg"><label class="fl">Date</label><input type="date" class="fi" id="eDate" value="'+today+'"></div>' +
+    '<div class="fg"><label class="fl">Type</label><select class="fi fsel" id="eType"><option value="expense">Expense (Money Out)</option><option value="cash">Cash Received (Money In)</option></select></div>' +
+    '<div class="fg"><label class="fl">Description</label><input type="text" class="fi" id="eDesc" placeholder="Transport, Fuel…"></div>' +
+    '<div class="fg"><label class="fl">Amount (Rs)</label><input type="number" inputmode="decimal" class="fi" id="eAmt" placeholder="0"></div>' +
+    '<button class="btn btn-p btn-full mt10" onclick="addExpense()">Save Entry</button>');
+}
+
+async function addExpense() {
+  var date=eid('eDate').value, type=eid('eType').value, desc=eid('eDesc').value.trim(), amt=pn(eid('eAmt').value);
+  if (!date||!desc||amt<=0) { alert('Fill all fields.'); return; }
+  var res = await sb.from('expenses').insert({ date:date, type:type, description:desc, amount:amt }).select().single();
+  if (res.error) { alert('Error: '+res.error.message); return; }
+  if (res.data) state.expenses.push({ id:res.data.id, date:date, type:type, description:desc, amount:amt });
+  closeModal(); renderExpenses();
+}
+
+async function delExpense(id) {
+  if (!confirm('Delete this entry?')) return;
+  await sb.from('expenses').delete().eq('id', id);
+  state.expenses = state.expenses.filter(function(e){ return e.id!==id; });
+  renderExpenses();
+}
+
+// ════════════════════════════════════════════
+// SHARED TABLE HELPERS
+// ════════════════════════════════════════════
+var TH = 'padding:8px 10px;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;border-right:1px solid rgba(255,255,255,.08);';
+var TH_R = TH+'text-align:right;', TH_C = TH+'text-align:center;', TH_L = TH+'text-align:left;';
+var TD = 'padding:7px 10px;border-bottom:1px solid var(--bdr);font-size:12px;vertical-align:middle;';
+var TD_R = TD+'text-align:right;', TD_C = TD+'text-align:center;';
+function statusBadge(bal) { return bal<=0?'<span style="background:#d4edda;color:#155724;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;">Cleared</span>':'<span style="background:#f8d7da;color:#721c24;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;">Due</span>'; }
+function activeBadge() { return '<span style="background:#d4edda;color:#155724;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;">Active</span>'; }
+function masterTableWrap(h,b,f) {
+  return '<div style="overflow-x:auto;border-radius:11px;box-shadow:0 2px 8px rgba(0,0,0,.10);border:1px solid var(--bdr);">' +
+    '<table style="width:100%;border-collapse:collapse;min-width:520px;background:var(--card);">' +
+    '<thead><tr style="background:var(--g0);">'+h+'</tr></thead><tbody>'+b+'</tbody>' +
+    '<tfoot><tr style="background:#f0f7f2;border-top:2px solid var(--g1);">'+f+'</tr></tfoot></table></div>';
+}
+
+// ════════════════════════════════════════════
+// CUSTOMERS
+// ════════════════════════════════════════════
+function renderCustomers() {
+  var p=eid('pane-customers');
+  var allC=state.customers.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  p.innerHTML =
+    '<div class="sh" style="margin-bottom:8px;"><span class="sh-t">Customer Master Table</span><button class="btn btn-p btn-sm" onclick="showAddCust()">+ Add Customer</button></div>' +
+    '<div class="search-wrap"><input type="search" class="fi" id="custSearch" placeholder="Search name or phone…" oninput="filterCusts(this.value)"></div>' +
+    '<div id="custList">'+buildCustList(allC)+'</div>';
+}
+
+function buildCustList(custs) {
+  if (!custs.length) return '<div class="empty-st">No customers found.</div>';
+  var totQty=0, totAmt=0;
+  var rows = custs.map(function(c,i) {
+    var mDays=(state.sales[selMonth]||{})[c.id]||{}, mQty=0;
+    Object.keys(mDays).forEach(function(d){ mQty+=pn(mDays[d]); });
+    var mAmt=mQty*pn(c.rate); totQty+=mQty; totAmt+=mAmt;
+    var bg=i%2===0?'var(--card)':'#f5faf7';
+    return '<tr style="background:'+bg+';">' +
+      '<td style="'+TD_C+'color:var(--muted);font-weight:700;width:28px;">'+(i+1)+'</td>' +
+      '<td style="'+TD+'"><div style="font-weight:700;font-size:13px;">'+escHtml(c.name)+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">'+escHtml(c.address||'—')+'</div></td>' +
+      '<td style="'+TD+'color:var(--muted);">'+escHtml(c.phone||'—')+'</td>' +
+      '<td style="'+TD_C+'"><div style="font-weight:700;font-size:12px;">Rs '+pn(c.rate).toFixed(0)+'</div><div style="font-size:10px;color:var(--muted);">per Kg</div></td>' +
+      '<td style="'+TD_C+'"><div style="font-weight:700;font-size:12px;">'+fmtQ(mQty)+' Kg</div><div style="font-size:10px;color:var(--muted);">'+mLabel(selMonth)+'</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-weight:700;font-size:12px;color:var(--g1);">Rs '+Math.round(mAmt).toLocaleString('en-PK')+'</div></td>' +
+      '<td style="'+TD_C+'">'+activeBadge()+'</td>' +
+      '<td style="'+TD_C+'white-space:nowrap;">' +
+        '<button onclick="showBill(\'customer\',\''+c.id+'\')" style="background:var(--g1);color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;margin-right:3px;">🧾 Bill</button>' +
+        '<button onclick="showAddCust(\''+c.id+'\')" style="background:#e8f0fe;color:#1a56db;border:none;border-radius:6px;padding:5px 7px;font-size:13px;cursor:pointer;margin-right:3px;">✏️</button>' +
+        '<button onclick="delCust(\''+c.id+'\')" style="background:#fde8e8;color:#c81e1e;border:none;border-radius:6px;padding:5px 7px;font-size:13px;cursor:pointer;">✕</button>' +
+      '</td></tr>';
+  }).join('');
+  var head = '<th style="'+TH_C+'width:28px;">#</th><th style="'+TH_L+'">Name</th><th style="'+TH_L+'">Phone</th><th style="'+TH_C+'">Rate/Kg</th><th style="'+TH_C+'">Monthly Qty</th><th style="'+TH_R+'">Monthly Bill</th><th style="'+TH_C+'">Status</th><th style="'+TH_C+'">Actions</th>';
+  var foot = '<td colspan="4" style="padding:9px 10px;font-size:12px;font-weight:700;color:var(--g1);">'+custs.length+' Customers</td><td style="padding:9px 10px;text-align:center;font-size:12px;font-weight:700;color:var(--g1);">'+fmtQ(totQty)+' Kg</td><td style="padding:9px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--g1);">Rs '+Math.round(totAmt).toLocaleString('en-PK')+'</td><td colspan="2"></td>';
+  return masterTableWrap(head, rows, foot);
+}
+
+function filterCusts(q) {
+  var lower=q.toLowerCase();
+  var filtered=state.customers.slice().sort(function(a,b){ return a.name.localeCompare(b.name); }).filter(function(c){ return !q||c.name.toLowerCase().indexOf(lower)!==-1||(c.phone||'').indexOf(q)!==-1; });
+  var el=eid('custList'); if(el) el.innerHTML=buildCustList(filtered);
+}
+
+function showAddCust(editId) {
+  var c=editId?state.customers.find(function(x){ return x.id===editId; }):null;
+  showModal(c?'Edit Customer':'Add Customer',
+    '<div class="fg"><label class="fl">Name *</label><input type="text" class="fi" id="cName" value="'+escHtml(c?c.name:'')+'"></div>' +
+    '<div class="fg"><label class="fl">Phone</label><input type="tel" class="fi" id="cPhone" value="'+escHtml(c?c.phone||'':'')+'"></div>' +
+    '<div class="fg"><label class="fl">Address</label><input type="text" class="fi" id="cAddr" value="'+escHtml(c?c.address||'':'')+'"></div>' +
+    '<div class="fg"><label class="fl">Rate (Rs/Kg) *</label><input type="number" inputmode="decimal" class="fi" id="cRate" value="'+(c?c.rate:'')+'"></div>' +
+    '<button class="btn btn-p btn-full mt10" onclick="saveCust(\''+(editId||'')+'\')">'+(c?'Update':'Add Customer')+'</button>');
+}
+
+async function saveCust(editId) {
+  var name=eid('cName').value.trim(), phone=eid('cPhone').value.trim(), address=eid('cAddr').value.trim(), rate=pn(eid('cRate').value);
+  if (!name||rate<=0) { alert('Name and Rate required.'); return; }
+  if (editId) {
+    var res=await sb.from('customers').update({name:name,phone:phone,address:address,rate:rate}).eq('id',editId);
+    if (res.error) { alert('Error: '+res.error.message); return; }
+    var idx=state.customers.findIndex(function(x){ return x.id===editId; });
+    if (idx!==-1) state.customers[idx]={id:editId,name:name,phone:phone,address:address,rate:rate,created_at:state.customers[idx].created_at};
+  } else {
+    var res2=await sb.from('customers').insert({name:name,phone:phone,address:address,rate:rate}).select().single();
+    if (res2.error) { alert('Error: '+res2.error.message); return; }
+    if (res2.data) state.customers.push(res2.data);
+  }
+  closeModal(); renderCustomers();
+}
+
+async function delCust(id) {
+  var c=state.customers.find(function(x){ return x.id===id; });
+  if (!c||!confirm('Delete "'+c.name+'"?')) return;
+  await sb.from('customers').delete().eq('id',id);
+  state.customers=state.customers.filter(function(x){ return x.id!==id; });
+  renderCustomers();
+}
+
+// ════════════════════════════════════════════
+// SUPPLIERS
+// ════════════════════════════════════════════
+function renderSuppliers() {
+  var p=eid('pane-suppliers');
+  var allS=state.suppliers.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  p.innerHTML =
+    '<div class="sh" style="margin-bottom:8px;"><span class="sh-t">Supplier Master Table</span><button class="btn btn-p btn-sm" onclick="showAddSupp()">+ Add Supplier</button></div>' +
+    '<div class="search-wrap"><input type="search" class="fi" id="suppSearch" placeholder="Search name or phone…" oninput="filterSupps(this.value)"></div>' +
+    '<div id="suppList">'+buildSuppList(allS)+'</div>';
+}
+
+function buildSuppList(supps) {
+  if (!supps.length) return '<div class="empty-st">No suppliers found.</div>';
+  var totQty=0, totAmt=0;
+  var rows = supps.map(function(s,i) {
+    var mDays=(state.purchases[selMonth]||{})[s.id]||{}, mQty=0;
+    Object.keys(mDays).forEach(function(d){ mQty+=pn(mDays[d]); });
+    var mAmt=mQty*pn(s.rate); totQty+=mQty; totAmt+=mAmt;
+    var bg=i%2===0?'var(--card)':'#f5faf7';
+    return '<tr style="background:'+bg+';">' +
+      '<td style="'+TD_C+'color:var(--muted);font-weight:700;width:28px;">'+(i+1)+'</td>' +
+      '<td style="'+TD+'"><div style="font-weight:700;font-size:13px;">'+escHtml(s.name)+'</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">'+escHtml(s.address||'—')+'</div></td>' +
+      '<td style="'+TD+'color:var(--muted);">'+escHtml(s.phone||'—')+'</td>' +
+      '<td style="'+TD_C+'"><div style="font-weight:700;font-size:12px;">Rs '+pn(s.rate).toFixed(0)+'</div><div style="font-size:10px;color:var(--muted);">per Kg</div></td>' +
+      '<td style="'+TD_C+'"><div style="font-weight:700;font-size:12px;">'+fmtQ(mQty)+' Kg</div><div style="font-size:10px;color:var(--muted);">'+mLabel(selMonth)+'</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-weight:700;font-size:12px;color:var(--g1);">Rs '+Math.round(mAmt).toLocaleString('en-PK')+'</div></td>' +
+      '<td style="'+TD_C+'">'+activeBadge()+'</td>' +
+      '<td style="'+TD_C+'white-space:nowrap;">' +
+        '<button onclick="showBill(\'supplier\',\''+s.id+'\')" style="background:var(--g1);color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:600;cursor:pointer;margin-right:3px;">🧾 Bill</button>' +
+        '<button onclick="showAddSupp(\''+s.id+'\')" style="background:#e8f0fe;color:#1a56db;border:none;border-radius:6px;padding:5px 7px;font-size:13px;cursor:pointer;margin-right:3px;">✏️</button>' +
+        '<button onclick="delSupp(\''+s.id+'\')" style="background:#fde8e8;color:#c81e1e;border:none;border-radius:6px;padding:5px 7px;font-size:13px;cursor:pointer;">✕</button>' +
+      '</td></tr>';
+  }).join('');
+  var head='<th style="'+TH_C+'width:28px;">#</th><th style="'+TH_L+'">Supplier</th><th style="'+TH_L+'">Phone</th><th style="'+TH_C+'">Rate/Kg</th><th style="'+TH_C+'">Monthly Qty</th><th style="'+TH_R+'">Monthly Bill</th><th style="'+TH_C+'">Status</th><th style="'+TH_C+'">Actions</th>';
+  var foot='<td colspan="4" style="padding:9px 10px;font-size:12px;font-weight:700;color:var(--g1);">'+supps.length+' Suppliers</td><td style="padding:9px 10px;text-align:center;font-size:12px;font-weight:700;color:var(--g1);">'+fmtQ(totQty)+' Kg</td><td style="padding:9px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--g1);">Rs '+Math.round(totAmt).toLocaleString('en-PK')+'</td><td colspan="2"></td>';
+  return masterTableWrap(head,rows,foot);
+}
+
+function filterSupps(q) {
+  var lower=q.toLowerCase();
+  var filtered=state.suppliers.slice().sort(function(a,b){ return a.name.localeCompare(b.name); }).filter(function(s){ return !q||s.name.toLowerCase().indexOf(lower)!==-1||(s.phone||'').indexOf(q)!==-1; });
+  var el=eid('suppList'); if(el) el.innerHTML=buildSuppList(filtered);
+}
+
+function showAddSupp(editId) {
+  var s=editId?state.suppliers.find(function(x){ return x.id===editId; }):null;
+  showModal(s?'Edit Supplier':'Add Supplier',
+    '<div class="fg"><label class="fl">Name *</label><input type="text" class="fi" id="sName" value="'+escHtml(s?s.name:'')+'"></div>' +
+    '<div class="fg"><label class="fl">Phone</label><input type="tel" class="fi" id="sPhone" value="'+escHtml(s?s.phone||'':'')+'"></div>' +
+    '<div class="fg"><label class="fl">Address</label><input type="text" class="fi" id="sAddr" value="'+escHtml(s?s.address||'':'')+'"></div>' +
+    '<div class="fg"><label class="fl">Rate (Rs/Kg) *</label><input type="number" inputmode="decimal" class="fi" id="sRate" value="'+(s?s.rate:'')+'"></div>' +
+    '<button class="btn btn-p btn-full mt10" onclick="saveSupp(\''+(editId||'')+'\')">'+(s?'Update':'Add Supplier')+'</button>');
+}
+
+async function saveSupp(editId) {
+  var name=eid('sName').value.trim(), phone=eid('sPhone').value.trim(), address=eid('sAddr').value.trim(), rate=pn(eid('sRate').value);
+  if (!name||rate<=0) { alert('Name and Rate required.'); return; }
+  if (editId) {
+    var res=await sb.from('suppliers').update({name:name,phone:phone,address:address,rate:rate}).eq('id',editId);
+    if (res.error) { alert('Error: '+res.error.message); return; }
+    var idx=state.suppliers.findIndex(function(x){ return x.id===editId; });
+    if (idx!==-1) state.suppliers[idx]={id:editId,name:name,phone:phone,address:address,rate:rate,created_at:state.suppliers[idx].created_at};
+  } else {
+    var res2=await sb.from('suppliers').insert({name:name,phone:phone,address:address,rate:rate}).select().single();
+    if (res2.error) { alert('Error: '+res2.error.message); return; }
+    if (res2.data) state.suppliers.push(res2.data);
+  }
+  closeModal(); renderSuppliers();
+}
+
+async function delSupp(id) {
+  var s=state.suppliers.find(function(x){ return x.id===id; });
+  if (!s||!confirm('Delete "'+s.name+'"?')) return;
+  await sb.from('suppliers').delete().eq('id',id);
+  state.suppliers=state.suppliers.filter(function(x){ return x.id!==id; });
+  renderSuppliers();
+}
+
+// ════════════════════════════════════════════
+// ACCOUNT RECEIVABLE
+// ════════════════════════════════════════════
+function renderReceivable() {
+  var p=eid('pane-receivable'), m=selMonth;
+  var custs=state.customers.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  var grandPrev=0,grandThis=0,grandDue=0,grandRec=0,grandBal=0;
+  var rows=custs.map(function(c,i) {
+    var prevBal=custBalBefore(c.id,m);
+    var mDays=(state.sales[m]||{})[c.id]||{}, mQty=0;
+    Object.keys(mDays).forEach(function(d){ mQty+=pn(mDays[d]); });
+    var thisMonth=mQty*pn(c.rate), totalDue=prevBal+thisMonth;
+    var received=state.recPayments.filter(function(p){ return p.custId===c.id&&p.date&&p.date.slice(0,7)===m; }).reduce(function(s,p){ return s+pn(p.amount); },0);
+    var balance=totalDue-received;
+    grandPrev+=prevBal; grandThis+=thisMonth; grandDue+=totalDue; grandRec+=received; grandBal+=balance;
+    var bg=i%2===0?'var(--card)':'#f5faf7';
+    return '<tr style="background:'+bg+';">' +
+      '<td style="'+TD_C+'color:var(--muted);font-weight:700;width:28px;">'+(i+1)+'</td>' +
+      '<td style="'+TD+'"><div style="font-weight:700;font-size:13px;">'+escHtml(c.name)+'</div><div style="font-size:10px;color:var(--muted);margin-top:1px;">'+escHtml(c.phone||'—')+'</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-size:12px;font-weight:600;color:'+(prevBal>0?'var(--red)':prevBal<0?'var(--grn)':'var(--muted)')+';">Rs '+Math.round(Math.abs(prevBal)).toLocaleString('en-PK')+'</div><div style="font-size:10px;color:var(--muted);">'+(prevBal>0?'Dr':prevBal<0?'Cr':'—')+'</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-size:12px;font-weight:600;">Rs '+Math.round(thisMonth).toLocaleString('en-PK')+'</div><div style="font-size:10px;color:var(--muted);">'+fmtQ(mQty)+' Kg</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-size:12px;font-weight:700;color:var(--g1);">Rs '+Math.round(totalDue).toLocaleString('en-PK')+'</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-size:12px;font-weight:600;color:var(--grn);">Rs '+Math.round(received).toLocaleString('en-PK')+'</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-size:12px;font-weight:700;color:'+(balance>0?'var(--red)':balance<0?'var(--grn)':'var(--muted)')+';">Rs '+Math.round(Math.abs(balance)).toLocaleString('en-PK')+'</div>'+(balance!==0?'<div style="font-size:10px;color:var(--muted);">'+(balance>0?'Dr':'Cr')+'</div>':'')+'</td>' +
+      '<td style="'+TD_C+'">'+statusBadge(balance)+'</td>' +
+      '<td style="'+TD_C+'white-space:nowrap;">' +
+        '<button onclick="showAddPay(\'receivable\',\''+c.id+'\')" style="background:var(--grn);color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">Receive</button>' +
+        '<button onclick="showCustLedger(\''+c.id+'\')" style="background:#fff8e1;color:#e65100;border:none;border-radius:6px;padding:5px 7px;font-size:11px;font-weight:600;cursor:pointer;margin-right:3px;">Ledger</button>' +
+        '<button onclick="showBill(\'customer\',\''+c.id+'\')" style="background:#e8f0fe;color:#1a56db;border:none;border-radius:6px;padding:5px 7px;font-size:12px;cursor:pointer;margin-right:3px;">🧾</button>' +
+        '<button onclick="doWAQuick(\'customer\',\''+c.id+'\')" style="background:#d4edda;color:#155724;border:none;border-radius:6px;padding:5px 7px;font-size:12px;cursor:pointer;">📱</button>' +
+      '</td></tr>';
+  }).join('');
+  var head='<th style="'+TH_C+'width:28px;">#</th><th style="'+TH_L+'">Customer</th><th style="'+TH_R+'">Prev Balance</th><th style="'+TH_R+'">This Month</th><th style="'+TH_R+'">Total Due</th><th style="'+TH_R+'">Received</th><th style="'+TH_R+'">Balance</th><th style="'+TH_C+'">Status</th><th style="'+TH_C+'">Actions</th>';
+  var foot='<td colspan="2" style="padding:9px 10px;font-size:12px;font-weight:700;color:var(--g1);">TOTALS — '+mLabel(m)+'</td><td style="padding:9px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--g1);">Rs '+Math.round(grandPrev).toLocaleString('en-PK')+'</td><td style="padding:9px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--g1);">Rs '+Math.round(grandThis).toLocaleString('en-PK')+'</td><td style="padding:9px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--g1);">Rs '+Math.round(grandDue).toLocaleString('en-PK')+'</td><td style="padding:9px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--grn);">Rs '+Math.round(grandRec).toLocaleString('en-PK')+'</td><td style="padding:9px 10px;text-align:right;font-size:13px;font-weight:700;color:var(--red);">Rs '+Math.round(grandBal).toLocaleString('en-PK')+'</td><td colspan="2"></td>';
+  var total=0; state.customers.forEach(function(c){ var b=custBal(c.id); if(b>0) total+=b; });
+  p.innerHTML =
+    '<div class="sh" style="margin-bottom:8px;"><span class="sh-t">Account Receivable — '+mLabel(m)+'</span></div>' +
+    '<div class="stat-grid" style="margin-bottom:10px;"><div class="sc"><div class="sc-lbl">Total Due</div><div class="sc-val text-r" style="font-size:17px;">Rs '+Math.round(grandDue).toLocaleString('en-PK')+'</div></div><div class="sc"><div class="sc-lbl">Net Receivable</div><div class="sc-val text-r" style="font-size:17px;">Rs '+Math.round(grandBal).toLocaleString('en-PK')+'</div></div></div>' +
+    (custs.length?masterTableWrap(head,rows,foot):'<div class="empty-st">No customers yet.</div>');
+}
+
+function showCustLedger(cid) {
+  var c=state.customers.find(function(x){ return x.id===cid; }); if(!c) return;
+  var monthSet={}; Object.keys(state.sales).forEach(function(m){ monthSet[m]=1; });
+  state.recPayments.filter(function(p){ return p.custId===cid&&p.date; }).forEach(function(p){ monthSet[p.date.slice(0,7)]=1; });
+  var months=Object.keys(monthSet).sort(), bal=0, rows='';
+  months.forEach(function(m) {
+    var mDays=(state.sales[m]||{})[cid]||{}, mq=0;
+    Object.keys(mDays).forEach(function(d){ mq+=pn(mDays[d]); });
+    var ma=mq*pn(c.rate);
+    if (ma>0) {
+      bal+=ma;
+      rows+='<tr style="background:rgba(198,40,40,.03);"><td style="padding:8px 10px;">'+mLabel(m)+'</td><td style="padding:8px 10px;color:var(--muted);">'+fmtQ(mq)+' Kg × Rs'+c.rate+'</td><td style="padding:8px 10px;" class="tr text-r fw6">+'+fmtR(ma)+'</td></tr>' +
+        '<tr><td colspan="2" style="padding:2px 10px 6px;font-size:10px;color:var(--muted);">Balance after sales</td><td style="padding:2px 10px 6px;" class="tr fw6">'+fmtR(bal)+'</td></tr>';
+    }
+    state.recPayments.filter(function(p){ return p.custId===cid&&p.date&&p.date.slice(0,7)===m; }).sort(function(a,b){ return a.date.localeCompare(b.date); }).forEach(function(pay) {
+      bal-=pn(pay.amount);
+      rows+='<tr style="background:rgba(46,125,50,.03);"><td style="padding:8px 10px;">'+fmtDate(pay.date)+'</td><td style="padding:8px 10px;color:var(--muted);">'+escHtml(pay.note||'Payment received')+'</td><td style="padding:8px 10px;" class="tr text-g fw6">('+fmtR(pay.amount)+')</td></tr>' +
+        '<tr><td colspan="2" style="padding:2px 10px 6px;font-size:10px;color:var(--muted);">Balance after payment</td><td style="padding:2px 10px 6px;" class="tr fw6">'+fmtR(bal)+'</td></tr>';
+    });
+  });
+  var balColor=bal>0?'text-r':bal<0?'text-g':'';
+  showModal(escHtml(c.name)+' — Ledger',
+    '<div style="overflow-x:auto;border-radius:10px;border:1px solid var(--bdr);"><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr style="background:var(--g1);color:#fff;"><th style="padding:8px 9px;text-align:left;">Date</th><th style="padding:8px 9px;text-align:left;">Detail</th><th style="padding:8px 9px;text-align:right;">Amount</th></tr></thead><tbody>'+(rows||'<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--muted);">No transactions yet</td></tr>')+'</tbody></table></div>' +
+    '<div style="margin-top:10px;padding:12px;background:var(--bg);border-radius:10px;display:flex;justify-content:space-between;align-items:center;"><span class="fw7" style="font-size:14px;">Net Balance</span><span class="fw7 '+balColor+'" style="font-size:16px;">'+fmtR(Math.abs(bal))+' '+(bal>0?'Due':bal<0?'Advance':'Clear')+'</span></div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px;"><button class="btn btn-p" style="flex:1;" onclick="closeModal();setTimeout(function(){showAddPay(\'receivable\',\''+cid+'\');},80)">+ Payment</button><button class="btn btn-g" style="flex:1;" onclick="showBill(\'customer\',\''+cid+'\')">🧾 Bill</button></div>');
+}
+
+// ════════════════════════════════════════════
+// ACCOUNT PAYABLE
+// ════════════════════════════════════════════
+function renderPayable() {
+  var p=eid('pane-payable'), m=selMonth;
+  var supps=state.suppliers.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  var grandPrev=0,grandThis=0,grandDue=0,grandPaid=0,grandBal=0;
+  var rows=supps.map(function(s,i) {
+    var prevBal=suppBalBefore(s.id,m);
+    var mDays=(state.purchases[m]||{})[s.id]||{}, mQty=0;
+    Object.keys(mDays).forEach(function(d){ mQty+=pn(mDays[d]); });
+    var thisMonth=mQty*pn(s.rate), totalDue=prevBal+thisMonth;
+    var paid=state.payPayments.filter(function(p){ return p.suppId===s.id&&p.date&&p.date.slice(0,7)===m; }).reduce(function(sum,p){ return sum+pn(p.amount); },0);
+    var balance=totalDue-paid;
+    grandPrev+=prevBal; grandThis+=thisMonth; grandDue+=totalDue; grandPaid+=paid; grandBal+=balance;
+    var bg=i%2===0?'var(--card)':'#f5faf7';
+    return '<tr style="background:'+bg+';">' +
+      '<td style="'+TD_C+'color:var(--muted);font-weight:700;width:28px;">'+(i+1)+'</td>' +
+      '<td style="'+TD+'"><div style="font-weight:700;font-size:13px;">'+escHtml(s.name)+'</div><div style="font-size:10px;color:var(--muted);margin-top:1px;">'+escHtml(s.phone||'—')+'</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-size:12px;font-weight:600;color:'+(prevBal>0?'var(--red)':prevBal<0?'var(--grn)':'var(--muted)')+';">Rs '+Math.round(Math.abs(prevBal)).toLocaleString('en-PK')+'</div><div style="font-size:10px;color:var(--muted);">'+(prevBal>0?'Dr':prevBal<0?'Cr':'—')+'</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-size:12px;font-weight:600;">Rs '+Math.round(thisMonth).toLocaleString('en-PK')+'</div><div style="font-size:10px;color:var(--muted);">'+fmtQ(mQty)+' Kg</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-size:12px;font-weight:700;color:var(--g1);">Rs '+Math.round(totalDue).toLocaleString('en-PK')+'</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-size:12px;font-weight:600;color:var(--grn);">Rs '+Math.round(paid).toLocaleString('en-PK')+'</div></td>' +
+      '<td style="'+TD_R+'"><div style="font-size:12px;font-weight:700;color:'+(balance>0?'var(--red)':balance<0?'var(--grn)':'var(--muted)')+';">Rs '+Math.round(Math.abs(balance)).toLocaleString('en-PK')+'</div>'+(balance!==0?'<div style="font-size:10px;color:var(--muted);">'+(balance>0?'Dr':'Cr')+'</div>':'')+'</td>' +
+      '<td style="'+TD_C+'">'+statusBadge(balance)+'</td>' +
+      '<td style="'+TD_C+'white-space:nowrap;">' +
+        '<button onclick="showAddPay(\'payable\',\''+s.id+'\')" style="background:var(--grn);color:#fff;border:none;border-radius:6px;padding:5px 9px;font-size:11px;font-weight:700;cursor:pointer;margin-right:3px;">Pay</button>' +
+        '<button onclick="showSuppLedger(\''+s.id+'\')" style="background:#fff8e1;color:#e65100;border:none;border-radius:6px;padding:5px 7px;font-size:11px;font-weight:600;cursor:pointer;margin-right:3px;">Ledger</button>' +
+        '<button onclick="showBill(\'supplier\',\''+s.id+'\')" style="background:#e8f0fe;color:#1a56db;border:none;border-radius:6px;padding:5px 7px;font-size:12px;cursor:pointer;margin-right:3px;">🧾</button>' +
+        '<button onclick="doWAQuick(\'supplier\',\''+s.id+'\')" style="background:#d4edda;color:#155724;border:none;border-radius:6px;padding:5px 7px;font-size:12px;cursor:pointer;">📱</button>' +
+      '</td></tr>';
+  }).join('');
+  var head='<th style="'+TH_C+'width:28px;">#</th><th style="'+TH_L+'">Supplier</th><th style="'+TH_R+'">Prev Balance</th><th style="'+TH_R+'">This Month</th><th style="'+TH_R+'">Total Due</th><th style="'+TH_R+'">Paid</th><th style="'+TH_R+'">Balance</th><th style="'+TH_C+'">Status</th><th style="'+TH_C+'">Actions</th>';
+  var foot='<td colspan="2" style="padding:9px 10px;font-size:12px;font-weight:700;color:var(--g1);">TOTALS — '+mLabel(m)+'</td><td style="padding:9px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--g1);">Rs '+Math.round(grandPrev).toLocaleString('en-PK')+'</td><td style="padding:9px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--g1);">Rs '+Math.round(grandThis).toLocaleString('en-PK')+'</td><td style="padding:9px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--g1);">Rs '+Math.round(grandDue).toLocaleString('en-PK')+'</td><td style="padding:9px 10px;text-align:right;font-size:12px;font-weight:700;color:var(--grn);">Rs '+Math.round(grandPaid).toLocaleString('en-PK')+'</td><td style="padding:9px 10px;text-align:right;font-size:13px;font-weight:700;color:var(--red);">Rs '+Math.round(grandBal).toLocaleString('en-PK')+'</td><td colspan="2"></td>';
+  p.innerHTML =
+    '<div class="sh" style="margin-bottom:8px;"><span class="sh-t">Account Payable — '+mLabel(m)+'</span></div>' +
+    '<div class="stat-grid" style="margin-bottom:10px;"><div class="sc"><div class="sc-lbl">Total Due</div><div class="sc-val text-r" style="font-size:17px;">Rs '+Math.round(grandDue).toLocaleString('en-PK')+'</div></div><div class="sc"><div class="sc-lbl">Net Payable</div><div class="sc-val text-r" style="font-size:17px;">Rs '+Math.round(grandBal).toLocaleString('en-PK')+'</div></div></div>' +
+    (supps.length?masterTableWrap(head,rows,foot):'<div class="empty-st">No suppliers yet.</div>');
+}
+
+function showSuppLedger(sid) {
+  var s=state.suppliers.find(function(x){ return x.id===sid; }); if(!s) return;
+  var monthSet={}; Object.keys(state.purchases).forEach(function(m){ monthSet[m]=1; });
+  state.payPayments.filter(function(p){ return p.suppId===sid&&p.date; }).forEach(function(p){ monthSet[p.date.slice(0,7)]=1; });
+  var months=Object.keys(monthSet).sort(), bal=0, rows='';
+  months.forEach(function(m) {
+    var mDays=(state.purchases[m]||{})[sid]||{}, mq=0;
+    Object.keys(mDays).forEach(function(d){ mq+=pn(mDays[d]); });
+    var ma=mq*pn(s.rate);
+    if (ma>0) {
+      bal+=ma;
+      rows+='<tr style="background:rgba(198,40,40,.03);"><td style="padding:8px 10px;">'+mLabel(m)+'</td><td style="padding:8px 10px;color:var(--muted);">'+fmtQ(mq)+' Kg × Rs'+s.rate+'</td><td style="padding:8px 10px;" class="tr text-r fw6">+'+fmtR(ma)+'</td></tr>' +
+        '<tr><td colspan="2" style="padding:2px 10px 6px;font-size:10px;color:var(--muted);">Balance after purchases</td><td style="padding:2px 10px 6px;" class="tr fw6">'+fmtR(bal)+'</td></tr>';
+    }
+    state.payPayments.filter(function(p){ return p.suppId===sid&&p.date&&p.date.slice(0,7)===m; }).sort(function(a,b){ return a.date.localeCompare(b.date); }).forEach(function(pay) {
+      bal-=pn(pay.amount);
+      rows+='<tr style="background:rgba(46,125,50,.03);"><td style="padding:8px 10px;">'+fmtDate(pay.date)+'</td><td style="padding:8px 10px;color:var(--muted);">'+escHtml(pay.note||'Payment made')+'</td><td style="padding:8px 10px;" class="tr text-g fw6">('+fmtR(pay.amount)+')</td></tr>' +
+        '<tr><td colspan="2" style="padding:2px 10px 6px;font-size:10px;color:var(--muted);">Balance after payment</td><td style="padding:2px 10px 6px;" class="tr fw6">'+fmtR(bal)+'</td></tr>';
+    });
+  });
+  var balColor=bal>0?'text-r':bal<0?'text-g':'';
+  showModal(escHtml(s.name)+' — Ledger',
+    '<div style="overflow-x:auto;border-radius:10px;border:1px solid var(--bdr);"><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr style="background:var(--g1);color:#fff;"><th style="padding:8px 9px;text-align:left;">Date</th><th style="padding:8px 9px;text-align:left;">Detail</th><th style="padding:8px 9px;text-align:right;">Amount</th></tr></thead><tbody>'+(rows||'<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--muted);">No transactions yet</td></tr>')+'</tbody></table></div>' +
+    '<div style="margin-top:10px;padding:12px;background:var(--bg);border-radius:10px;display:flex;justify-content:space-between;align-items:center;"><span class="fw7" style="font-size:14px;">Net Balance</span><span class="fw7 '+balColor+'" style="font-size:16px;">'+fmtR(Math.abs(bal))+' '+(bal>0?'Due':bal<0?'Advance':'Clear')+'</span></div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px;"><button class="btn btn-p" style="flex:1;" onclick="closeModal();setTimeout(function(){showAddPay(\'payable\',\''+sid+'\');},80)">+ Payment</button><button class="btn btn-g" style="flex:1;" onclick="showBill(\'supplier\',\''+sid+'\')">🧾 Bill</button></div>');
+}
+
+// ════════════════════════════════════════════
+// PAYMENTS
+// ════════════════════════════════════════════
+function showAddPay(type, entityId) {
+  var isRec=type==='receivable';
+  var entity=isRec?state.customers.find(function(x){ return x.id===entityId; }):state.suppliers.find(function(x){ return x.id===entityId; });
+  if (!entity) return;
+  var bal=isRec?custBal(entityId):suppBal(entityId);
+  var today=new Date().toISOString().slice(0,10);
+  showModal('Payment — '+escHtml(entity.name),
+    '<div style="padding:10px 12px;background:var(--bg);border-radius:9px;margin-bottom:14px;"><div style="font-size:11px;color:var(--muted);">Current Balance</div><div style="font-size:17px;font-weight:700;color:'+(bal>0?'var(--red)':'var(--grn)')+';">'+fmtR(Math.abs(bal))+(bal>0?' Due':bal<0?' Advance':' Clear')+'</div></div>' +
+    '<div class="fg"><label class="fl">Date</label><input type="date" class="fi" id="pDate" value="'+today+'"></div>' +
+    '<div class="fg"><label class="fl">Amount (Rs)</label><input type="number" inputmode="decimal" class="fi" id="pAmt" placeholder="0"></div>' +
+    '<div class="fg"><label class="fl">Note</label><input type="text" class="fi" id="pNote" placeholder="Cash, Online, Cheque…"></div>' +
+    '<button class="btn btn-p btn-full mt10" onclick="savePay(\''+type+'\',\''+entityId+'\')">Save Payment</button>');
+}
+
+async function savePay(type, entityId) {
+  var date=eid('pDate').value, amt=pn(eid('pAmt').value), note=eid('pNote').value.trim();
+  if (!date||amt<=0) { alert('Enter valid date and amount.'); return; }
+  if (type==='receivable') {
+    var res=await sb.from('rec_payments').insert({ customer_id:entityId, date:date, amount:amt, note:note }).select().single();
+    if (res.error) { alert('Error: '+res.error.message); return; }
+    if (res.data) state.recPayments.push({ id:res.data.id, custId:entityId, date:date, amount:amt, note:note });
+    closeModal(); renderReceivable();
+  } else {
+    var res2=await sb.from('pay_payments').insert({ supplier_id:entityId, date:date, amount:amt, note:note }).select().single();
+    if (res2.error) { alert('Error: '+res2.error.message); return; }
+    if (res2.data) state.payPayments.push({ id:res2.data.id, suppId:entityId, date:date, amount:amt, note:note });
+    closeModal(); renderPayable();
+  }
+}
+
+// ════════════════════════════════════════════
+// BILL DATA
+// ════════════════════════════════════════════
+function getBillData(type, entityId, month) {
+  var isCust=type==='customer';
+  var entity=isCust?state.customers.find(function(x){ return x.id===entityId; }):state.suppliers.find(function(x){ return x.id===entityId; });
+  if (!entity) return null;
+  var dataObj=isCust?state.sales:state.purchases, days=daysIn(month), eDays=(dataObj[month]||{})[entityId]||{}, entries=[], totalQty=0;
+  for (var d=1;d<=days;d++) { var q=pn(eDays[d]||0); if(q>0){ totalQty+=q; entries.push({day:d,qty:q,amt:q*pn(entity.rate)}); } }
+  var totalAmt=totalQty*pn(entity.rate);
+  var prevBal=isCust?custBalBefore(entityId,month):suppBalBefore(entityId,month);
+  var pays=isCust?state.recPayments.filter(function(p){ return p.custId===entityId&&p.date&&p.date.slice(0,7)===month; }):state.payPayments.filter(function(p){ return p.suppId===entityId&&p.date&&p.date.slice(0,7)===month; });
+  var totalPays=pays.reduce(function(s,p){ return s+pn(p.amount); },0);
+  return { entity:entity, isCust:isCust, month:month, entries:entries, totalQty:totalQty, totalAmt:totalAmt, prevBal:prevBal, pays:pays, totalPays:totalPays, netDue:prevBal+totalAmt-totalPays };
+}
+
+function showBill(type, entityId) {
+  var isCust=type==='customer';
+  var entity=isCust?state.customers.find(function(x){ return x.id===entityId; }):state.suppliers.find(function(x){ return x.id===entityId; });
+  if (!entity) return;
+  var dataObj=isCust?state.sales:state.purchases, mSet={}; mSet[selMonth]=1;
+  Object.keys(dataObj).forEach(function(m){ var md=(dataObj[m]||{})[entityId]||{}; if(Object.keys(md).some(function(d){ return pn(md[d])>0; })) mSet[m]=1; });
+  var monthList=Object.keys(mSet).sort().reverse().slice(0,12);
+  var opts=monthList.map(function(m){ return '<option value="'+m+'"'+(m===selMonth?' selected':'')+'>'+mLabel(m)+'</option>'; }).join('');
+  showModal('Bill — '+escHtml(entity.name),
+    '<div class="fg"><label class="fl">Select Month</label><select class="fi fsel" id="billMonth">'+opts+'</select></div>' +
+    '<div style="display:flex;gap:8px;"><button class="btn btn-p" style="flex:1;" onclick="doPrint(\''+type+'\',\''+entityId+'\')">🖨️ Print</button><button class="btn btn-wa" style="flex:1;" onclick="doWA(\''+type+'\',\''+entityId+'\')">📱 WhatsApp</button></div>');
+}
+
+function doWAQuick(type, entityId) {
+  eid('mBox').innerHTML =
+    '<div class="modal-hdr"><span class="modal-title">WhatsApp Bill</span><button class="modal-x" onclick="closeModal()">✕</button></div>' +
+    '<div class="fg"><label class="fl">Select Month</label><select class="fi fsel" id="billMonth">' +
+    (function(){ var opts='', cur=selMonth; for(var i=0;i<6;i++){ var m2=adjMonth(cur,-i); opts+='<option value="'+m2+'"'+(i===0?' selected':'')+'>'+mLabel(m2)+'</option>'; } return opts; })() +
+    '</select></div>' +
+    '<div style="display:flex;gap:8px;"><button class="btn btn-p" style="flex:1;" onclick="doPrint(\''+type+'\',\''+entityId+'\')">🖨️ Print</button><button class="btn btn-wa" style="flex:1;" onclick="doWA(\''+type+'\',\''+entityId+'\')">📱 WhatsApp</button></div>';
+  eid('mOverlay').style.display='flex';
+}
+
+function doPrint(type, entityId) {
+  var month=eid('billMonth')?eid('billMonth').value:selMonth;
+  var bd=getBillData(type,entityId,month); if(!bd) return;
+  var mn=mShort(month), printDate=new Date().toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'});
+  var tableRows=bd.entries.map(function(e,i){ var bg=i%2===0?'#fff':'#f2f9f5'; return '<tr style="background:'+bg+';"><td style="padding:5px 10px;border-bottom:1px solid #d8e8df;font-size:12px;">'+e.day+' '+mn+'</td><td style="padding:5px 10px;border-bottom:1px solid #d8e8df;text-align:center;font-size:12px;">'+fmtQ(e.qty)+'</td><td style="padding:5px 10px;border-bottom:1px solid #d8e8df;text-align:center;font-size:12px;">Rs '+bd.entity.rate+'</td><td style="padding:5px 10px;border-bottom:1px solid #d8e8df;text-align:right;font-size:12px;font-weight:600;">Rs '+Math.round(e.amt).toLocaleString('en-PK')+'</td></tr>'; }).join('');
+  eid('printArea').innerHTML =
+    '<style>@page{size:A4;margin:12mm;}*{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}body{margin:0;}#billDoc{font-family:Arial,sans-serif;max-width:540px;margin:0 auto;color:#1a1a1a;font-size:12px;}</style>' +
+    '<div id="billDoc">' +
+    '<div style="background:#1A3A2E !important;color:#fff !important;padding:14px 18px;border-radius:6px 6px 0 0;-webkit-print-color-adjust:exact;"><div style="font-size:17px;font-weight:700;">'+escHtml(state.settings.bizName)+'</div><div style="font-size:11px;opacity:.8;margin-top:2px;">'+escHtml(state.settings.bizAddr)+'</div><div style="font-size:12px;margin-top:2px;">'+escHtml(state.settings.bizPhone)+'</div></div>' +
+    '<div style="background:#1E6B45 !important;color:#fff !important;padding:7px 18px;display:flex;justify-content:space-between;-webkit-print-color-adjust:exact;"><div style="font-size:11px;font-weight:700;text-transform:uppercase;">'+(bd.isCust?'Sale Bill':'Purchase Bill')+'</div><div style="font-size:11px;">'+mLabel(month)+' | '+printDate+'</div></div>' +
+    '<div style="border:1px solid #d8e8df;border-top:none;padding:10px 18px;background:#f6fbf8;display:flex;justify-content:space-between;gap:16px;">' +
+      '<table style="font-size:12px;border-collapse:collapse;flex:1;"><tr><td style="color:#666;padding:2px 10px 2px 0;white-space:nowrap;">'+(bd.isCust?'Customer':'Supplier')+'</td><td style="font-weight:700;">'+escHtml(bd.entity.name)+'</td></tr>'+(bd.entity.phone?'<tr><td style="color:#666;padding:2px 10px 2px 0;">Phone</td><td>'+escHtml(bd.entity.phone)+'</td></tr>':'')+(bd.entity.address?'<tr><td style="color:#666;padding:2px 10px 2px 0;">Address</td><td>'+escHtml(bd.entity.address)+'</td></tr>':'')+'</table>' +
+      '<table style="font-size:12px;border-collapse:collapse;text-align:right;"><tr><td style="color:#666;padding:2px 0 2px 16px;">Rate</td><td style="font-weight:700;padding:2px 0 2px 10px;">Rs '+bd.entity.rate+' / Kg</td></tr><tr><td style="color:#666;padding:2px 0 2px 16px;">Total Qty</td><td style="font-weight:700;padding:2px 0 2px 10px;">'+fmtQ(bd.totalQty)+' Kg</td></tr></table>' +
+    '</div>' +
+    '<table style="width:100%;border-collapse:collapse;border:1px solid #d8e8df;border-top:none;">' +
+      '<thead><tr style="background:#e0f0e8 !important;-webkit-print-color-adjust:exact;"><th style="padding:7px 10px;text-align:left;font-size:10.5px;font-weight:700;color:#1A3A2E;text-transform:uppercase;border-bottom:1.5px solid #a8d0b8;">Date</th><th style="padding:7px 10px;text-align:center;font-size:10.5px;font-weight:700;color:#1A3A2E;text-transform:uppercase;border-bottom:1.5px solid #a8d0b8;">Qty (Kg)</th><th style="padding:7px 10px;text-align:center;font-size:10.5px;font-weight:700;color:#1A3A2E;text-transform:uppercase;border-bottom:1.5px solid #a8d0b8;">Rate</th><th style="padding:7px 10px;text-align:right;font-size:10.5px;font-weight:700;color:#1A3A2E;text-transform:uppercase;border-bottom:1.5px solid #a8d0b8;">Amount</th></tr></thead>' +
+      '<tbody>'+(tableRows||'<tr><td colspan="4" style="text-align:center;padding:18px;color:#999;">No entries this month</td></tr>')+'</tbody>' +
+      '<tfoot><tr style="background:#e0f0e8 !important;-webkit-print-color-adjust:exact;"><td colspan="2" style="padding:7px 10px;font-weight:700;font-size:12px;color:#1A3A2E;">Month Total</td><td style="padding:7px 10px;text-align:center;font-weight:700;font-size:12px;color:#1A3A2E;">'+fmtQ(bd.totalQty)+' Kg</td><td style="padding:7px 10px;text-align:right;font-weight:700;font-size:13px;color:#1A3A2E;">Rs '+Math.round(bd.totalAmt).toLocaleString('en-PK')+'</td></tr></tfoot>' +
+    '</table>' +
+    '<div style="border:1px solid #d8e8df;border-top:none;padding:12px 18px;background:#fff;">' +
+      '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+        (bd.prevBal!==0?'<tr><td style="padding:3px 0;color:#555;">Previous Balance</td><td style="padding:3px 0;text-align:right;font-weight:600;color:'+(bd.prevBal>0?'#C62828':'#2E7D32')+';">Rs '+Math.round(Math.abs(bd.prevBal)).toLocaleString('en-PK')+(bd.prevBal>0?' Dr':' Cr')+'</td></tr>':'') +
+        '<tr><td style="padding:3px 0;color:#555;">'+(bd.isCust?'This Month Sale':'This Month Purchase')+'</td><td style="padding:3px 0;text-align:right;font-weight:600;">Rs '+Math.round(bd.totalAmt).toLocaleString('en-PK')+'</td></tr>' +
+        (bd.totalPays>0?'<tr><td style="padding:3px 0;color:#555;">'+(bd.isCust?'Payments Received':'Payments Made')+'</td><td style="padding:3px 0;text-align:right;font-weight:600;color:#2E7D32;">(Rs '+Math.round(bd.totalPays).toLocaleString('en-PK')+')</td></tr>':'') +
+        '<tr><td colspan="2" style="padding:4px 0;"><div style="border-top:1.5px solid #1A3A2E;margin:4px 0;"></div></td></tr>' +
+        '<tr><td style="padding:3px 0;font-weight:700;font-size:14px;color:#1A3A2E;">Net Balance Due</td><td style="padding:3px 0;text-align:right;font-weight:700;font-size:15px;color:'+(bd.netDue>0?'#C62828':bd.netDue<0?'#2E7D32':'#1A3A2E')+';">Rs '+Math.round(Math.abs(bd.netDue)).toLocaleString('en-PK')+(bd.netDue>0?' Dr':bd.netDue<0?' Cr':'')+'</td></tr>' +
+      '</table>' +
+    '</div>' +
+    '<div style="border:1px solid #d8e8df;border-top:none;border-radius:0 0 6px 6px;padding:9px 18px;background:#f0f7f3;display:flex;justify-content:space-between;"><div style="font-size:10px;color:#888;">Thank you for your business</div><div style="font-size:10px;color:#888;">'+escHtml(state.settings.bizName)+'</div></div>' +
+    '</div>';
+  window.print();
+}
+
+function doWA(type, entityId) {
+  var month=eid('billMonth')?eid('billMonth').value:selMonth;
+  var bd=getBillData(type,entityId,month); if(!bd) return;
+  var mn=mShort(month);
+  var lines=['*'+state.settings.bizName+'*', state.settings.bizAddr, '📞 '+state.settings.bizPhone, '', (bd.isCust?'🧾 Sale Bill':'🧾 Purchase Bill')+' — *'+mLabel(month)+'*','━━━━━━━━━━━━━━━━━━','*'+bd.entity.name+'*',(bd.entity.phone?'📱 '+bd.entity.phone:null),'Rate: Rs '+bd.entity.rate+'/Kg','━━━━━━━━━━━━━━━━━━'];
+  bd.entries.forEach(function(e){ lines.push(e.day+' '+mn+':  '+fmtQ(e.qty)+' Kg  =  Rs '+Math.round(e.amt).toLocaleString('en-PK')); });
+  lines.push('━━━━━━━━━━━━━━━━━━');
+  lines.push('*Total:  '+fmtQ(bd.totalQty)+' Kg  =  Rs '+Math.round(bd.totalAmt).toLocaleString('en-PK')+'*');
+  if (bd.prevBal!==0) lines.push('Prev. Balance:  Rs '+Math.round(Math.abs(bd.prevBal)).toLocaleString('en-PK')+(bd.prevBal>0?' Dr':' Cr'));
+  if (bd.totalPays>0) lines.push((bd.isCust?'Payment Received:':'Payment Made:')+' Rs '+Math.round(bd.totalPays).toLocaleString('en-PK'));
+  lines.push('━━━━━━━━━━━━━━━━━━');
+  lines.push('*Net Due:  Rs '+Math.round(Math.abs(bd.netDue)).toLocaleString('en-PK')+(bd.netDue>0?' Dr':bd.netDue<0?' Cr':' ✅ Clear')+'*');
+  lines.push(''); lines.push('_'+new Date().toLocaleDateString('en-PK')+'_');
+  var text=lines.filter(function(l){ return l!==null&&l!==undefined; }).join('\n');
+  var rawPhone=(bd.entity.phone||'').replace(/\D/g,'');
+  var waUrl;
+  if (rawPhone.length>=10) {
+    if (rawPhone.charAt(0)==='0') rawPhone='92'+rawPhone.slice(1);
+    else if (rawPhone.slice(0,2)!=='92') rawPhone='92'+rawPhone;
+    waUrl='https://wa.me/'+rawPhone+'?text='+encodeURIComponent(text);
+  } else { waUrl='https://wa.me/?text='+encodeURIComponent(text); }
+  location.href=waUrl;
+}
+
+// ════════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════════
+function renderSettings() {
+  var p=eid('pane-settings');
+  p.innerHTML =
+    '<div class="card"><div style="font-weight:700;font-size:14px;margin-bottom:12px;">Business Info</div>' +
+    '<div class="fg"><label class="fl">Business Name</label><input type="text" class="fi" id="sBizName" value="'+escHtml(state.settings.bizName)+'"></div>' +
+    '<div class="fg"><label class="fl">Address</label><input type="text" class="fi" id="sBizAddr" value="'+escHtml(state.settings.bizAddr)+'"></div>' +
+    '<div class="fg"><label class="fl">Phone (for bills)</label><input type="text" class="fi" id="sBizPhone" value="'+escHtml(state.settings.bizPhone)+'"></div>' +
+    '<button class="btn btn-p btn-sm" onclick="saveBizInfo()">Save Info</button></div>' +
+
+    '<div class="card"><div style="font-weight:700;font-size:14px;margin-bottom:12px;">Change PIN</div>' +
+    '<p style="font-size:12px;color:var(--muted);margin-bottom:12px;">PIN is shared — all users enter the same PIN after logging in.</p>' +
+    '<div class="fg"><label class="fl">Current PIN</label><input type="password" class="fi" id="sOldPin" placeholder="Current PIN"></div>' +
+    '<div class="fg"><label class="fl">New PIN</label><input type="text" class="fi" id="sNewPin" placeholder="Numbers only"></div>' +
+    '<button class="btn btn-p btn-sm" onclick="changePin()">Change PIN</button></div>' +
+
+    '<div class="card">' +
+    '<div style="font-weight:700;font-size:14px;margin-bottom:4px;">Add Users 👥</div>' +
+    '<p style="font-size:12px;color:var(--muted);margin-bottom:12px;">To add a new user:<br>1. Go to <strong>supabase.com</strong> → your project<br>2. Left sidebar → <strong>Authentication</strong> → <strong>Users</strong><br>3. Click <strong>Invite user</strong> → enter their email<br>4. They get an email to set their password<br>5. Share the app URL + PIN with them</p>' +
+    '<div style="background:#e8f5e9;border-radius:8px;padding:10px 12px;font-size:12px;color:#1b5e20;">Supports 3–5 users. All see data in real-time. 🟢 = connected.</div></div>' +
+
+    '<div class="card"><div style="font-weight:700;font-size:14px;margin-bottom:8px;">Account</div>' +
+    '<button class="btn btn-d btn-sm" onclick="doLogout()">Sign Out</button></div>' +
+
+    '<div class="card" style="background:var(--bg);text-align:center;"><div style="font-size:12px;color:var(--muted);">Subzi.pk · v1.0 · Powered by Supabase</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">Real-time sync · Up to 5 users · 500 MB free storage</div></div>';
+}
+
+async function saveBizInfo() {
+  var n=eid('sBizName').value.trim(), a=eid('sBizAddr').value.trim(), ph=eid('sBizPhone').value.trim();
+  if (n) { state.settings.bizName=n; await sb.from('app_settings').upsert({key:'biz_name',value:n},{onConflict:'key'}); }
+  if (a) { state.settings.bizAddr=a; await sb.from('app_settings').upsert({key:'biz_addr',value:a},{onConflict:'key'}); }
+  if (ph){ state.settings.bizPhone=ph; await sb.from('app_settings').upsert({key:'biz_phone',value:ph},{onConflict:'key'}); }
+  alert('Business info saved!');
+}
+
+async function changePin() {
+  var oldPin=eid('sOldPin').value, newPin=eid('sNewPin').value.trim();
+  if (oldPin!==state.settings.pin) { alert('Current PIN incorrect.'); return; }
+  if (newPin.length<4) { alert('New PIN must be at least 4 characters.'); return; }
+  await sb.from('app_settings').upsert({key:'pin',value:newPin},{onConflict:'key'});
+  state.settings.pin=newPin;
+  eid('sOldPin').value=''; eid('sNewPin').value='';
+  alert('PIN changed for all users!');
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+async function init() {
+  selMonth = nowMonth();
+  var res = await sb.auth.getSession();
+  if (res.data && res.data.session) {
+    await loadSettings();
+    var email = res.data.session.user.email || '';
+    showPinScreen(email);
+  } else {
+    eid('loginScreen').style.display = 'flex';
+  }
+  // Allow Enter key on login form
+  document.addEventListener('keydown', function(e) {
+    if (e.key==='Enter' && eid('loginScreen').style.display!=='none') doLogin();
+  });
+}
+
+init();
+</script>
+</body>
+</html>
